@@ -70,12 +70,14 @@ contract ManagementContract is Ownable {
     require(vendors[msg.sender].id != "");
     vendors[msg.sender].deposit.add(msg.value);
     uint256 amount = ids.length;
-    require(vendors[msg.sender].deposit >= amount.mul(vendors[msg.sender].fee));
+    uint256 totalCost = amount.mul(vendors[msg.sender].fee);
+    require(vendors[msg.sender].deposit >= totalCost);
     for (uint256 i = 0; i < amount; i++) {
       batteryManagement.createBattery(msg.sender, ids[i]);
       vendors[msg.sender].deposit.sub(vendors[msg.sender].fee);
       NewBattery(vendors[msg.sender].id, ids[i]);
     }
+    require(serviceProviderWallet.send(totalCost));
   }
 
   function registrationDeposit() public view returns (uint256) {

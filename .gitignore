@@ -9,3 +9,4 @@
 /truffle-config.js
 *Interface*
 /src/contracts/ServiceProviderWallet.sol
+.idea*
