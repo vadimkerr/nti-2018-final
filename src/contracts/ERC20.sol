@@ -21,23 +21,21 @@ contract ERC20 is ERC20TokenInterface, Ownable {
     return balances[_owner];
   }
 
-  function transfer(address _to, uint256 _value) public returns (bool) {
+  function transfer(address _to, uint256 _value) public {
     require(_to != address(0));
     require(_value <= balances[msg.sender]);
 
     balances[msg.sender] = balances[msg.sender].sub(_value);
     balances[_to] = balances[_to].add(_value);
     Transfer(msg.sender, _to, _value);
-    return true;
   }
 
-  function approve(address _spender, uint256 _value) public returns (bool) {
+  function approve(address _spender, uint256 _value) public {
     allowed[msg.sender][_spender] = _value;
     Approval(msg.sender, _spender, _value);
-    return true;
   }
 
-  function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
+  function transferFrom(address _from, address _to, uint256 _value) public {
     require(_to != address(0));
     require(_value <= balances[_from]);
     require(_value <= allowed[_from][msg.sender]);
@@ -46,17 +44,15 @@ contract ERC20 is ERC20TokenInterface, Ownable {
     balances[_to] = balances[_to].add(_value);
     allowed[_from][msg.sender] = allowed[_from][msg.sender].sub(_value);
     Transfer(_from, _to, _value);
-    return true;
   }
 
   function allowance(address _owner, address _spender) public view returns (uint256) {
     return allowed[_owner][_spender];
   }
 
-  function mint(address _to, uint256 _amount) onlyOwner public returns (bool) {
+  function mint(address _to, uint256 _amount) public onlyOwner {
     totalSupply_ = totalSupply_.add(_amount);
     balances[_to] = balances[_to].add(_amount);
     Transfer(address(0), _to, _amount);
-    return true;
   }
 }

@@ -6,18 +6,18 @@ import "./ERC20.sol";
 
 contract BatteryManagement is BatteryManagementInterface {
   modifier onlyManager() {
-    require(msg.sender == managementContract);
+    require(msg.sender == address(managementContract));
     _;
   }
 
-  ManagementContract managementContract;
-  ERC20 currencyToken;
+  ManagementContract public managementContract;
+  ERC20 public erc20;
 
-  mapping (address => []bytes20) batteries;
+  mapping (address => bytes20[]) batteries;
 
   function BatteryManagement(address _managementContract, address _token) {
-    managementContract = ManagementContracgt(_managementContract);
-    currencyTokenContract = ERC20(_token);
+    managementContract = ManagementContract(_managementContract);
+    erc20 = ERC20(_token);
   }
 
   function createBattery(address vendor, bytes20 id) public onlyManager {

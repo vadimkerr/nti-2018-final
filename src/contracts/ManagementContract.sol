@@ -8,8 +8,8 @@ import "./ERC20.sol";
 
 contract ManagementContract is ManagementContractInterface, Ownable {
   uint256 fee;
-  ServiceProviderWallet serviceProviderWallet;
-  BatteryManagement batteryManagement;
+  ServiceProviderWallet public serviceProviderWallet;
+  BatteryManagement public batteryManagement;
 
   mapping (address => bytes4) vendors;
 
