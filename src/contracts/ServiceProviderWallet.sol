@@ -1,4 +1,4 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.19;
 
 import './lib/Ownable.sol';
 
@@ -16,15 +16,15 @@ contract ServiceProviderWallet is Ownable {
 
     function () public payable {
         require(msg.value > 0);
-        emit Received(msg.sender, msg.value);
+        Received(msg.sender, msg.value);
     }
-    
+
     // Используется для выдачи части средств с адреса контаркта
     function withdraw(address _to, uint256 _value) onlyOwner external {
         _to.transfer(_value);
-        emit Withdraw(msg.sender, _to, _value);
+        Withdraw(msg.sender, _to, _value);
     }
-    
+
     // Позволяет удалить контракт
     function kill() onlyOwner external {
         selfdestruct(owner);

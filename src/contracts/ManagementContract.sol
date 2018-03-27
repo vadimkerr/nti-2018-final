@@ -1,4 +1,4 @@
-pragma solidity^0.4.19;
+pragma solidity ^0.4.19;
 
 import "./ManagementContractInterface.sol";
 import "./lib/Ownable.sol";
@@ -9,8 +9,8 @@ import "./ERC20.sol";
 contract ManagementContract is Ownable {
   event Vendor(address, bytes4);
   event NewBattery(bytes4, bytes20);
-  
-  uint256 fee;
+
+  uint256 public fee;
   ServiceProviderWallet public serviceProviderWallet;
   BatteryManagement public batteryManagement;
 
@@ -31,7 +31,7 @@ contract ManagementContract is Ownable {
 
   function registerVendor(bytes _bytes) public payable {
     require(msg.value >= fee);
-    bytes4 _bytes4 = bytes4(sha3(msg.sender, _bytes, block.number));
+    bytes4 _bytes4 = bytes4(keccak256(msg.sender, _bytes, block.number));
     vendors[msg.sender] = _bytes4;
     Vendor(msg.sender, _bytes4);
   }
