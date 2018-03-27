@@ -10,3 +10,4 @@
 *Interface*
 /src/contracts/ServiceProviderWallet.sol
 .idea*
+/commit.sh
