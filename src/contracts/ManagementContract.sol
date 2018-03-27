@@ -8,8 +8,10 @@ import "./ERC20.sol";
 
 contract ManagementContract is ManagementContractInterface, Ownable {
   uint256 fee;
-  ServiceProviderWallet serviceProviderWalletContract;
-  BatteryManagement batteryManagementContract;
+  ServiceProviderWallet serviceProviderWallet;
+  BatteryManagement batteryManagement;
+
+  mapping (address => bytes4) vendors;
 
   function ManagementContract(address _currencyToken, uint256 _fee) {
     serviceProviderWallet = ServiceProviderWallet(serviceProviderWallet);
@@ -23,4 +25,21 @@ contract ManagementContract is ManagementContractInterface, Ownable {
   function setFee(uint256 _fee) public onlyOwner {
     fee = _fee;
   }
+
+  function registerVendor(bytes _bytes) public payable {
+    require(msg.value >= fee);
+    bytes4 _bytes4 = bytes4(sha3(msg.sender, _bytes, block.number));
+    vendors[msg.sender] = _bytes4;
+    Vendor(msg.sender, _bytes4);
+  }
+
+  function registerBatteries(bytes20[] ids) public payable {
+    require(vendors[msg.sender] != "");
+    for (uint256 i = 0; i < ids.length; i++) {
+      batteryManagement.createBattery(msg.sender, ids[i]);
+      NewBattery(vendors[msg.sender], ids[i]);
+    }
+  }
+
+  function() payable {}
 }
