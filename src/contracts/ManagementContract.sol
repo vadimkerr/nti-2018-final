@@ -23,6 +23,8 @@ contract ManagementContract is Ownable {
   BatteryManagement public batteryManagement;
 
   mapping (address => vendor) vendors;
+  mapping (address => bool) serviceCenters;
+  mapping (address => bool) cars;
 
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
     serviceProviderWallet = ServiceProviderWallet(_serviceProviderWallet);
@@ -38,10 +40,14 @@ contract ManagementContract is Ownable {
   }
 
   function registerVendor(bytes _bytes) public payable {
-    require(msg.value >= batteryFee.mul(1000));
+    require(msg.value >= registrationDeposit());
     bytes4 _bytes4 = bytes4(keccak256(msg.sender, _bytes, block.number));
     vendors[msg.sender] = vendor(_bytes4, msg.value);
     Vendor(msg.sender, _bytes4);
+  }
+
+  function vendorDeposit(address _vendor) public view returns (uint256) {
+    return vendors[_vendor].deposit;
   }
 
   function registerBatteries(bytes20[] ids) public payable {
@@ -52,6 +58,22 @@ contract ManagementContract is Ownable {
       batteryManagement.createBattery(msg.sender, ids[i]);
       NewBattery(vendors[msg.sender].id, ids[i]);
     }
+  }
+
+  function registrationDeposit() public view returns (uint256) {
+    return batteryFee.mul(1000);
+  }
+
+  function registerServiceCenter() public {
+    require(!serviceCenters[msg.sender]);
+    require(!cars[msg.sender]);
+    serviceCenters[msg.sender] = true;
+  }
+
+  function registerCar() public {
+    require(!serviceCenters[msg.sender]);
+    require(!cars[msg.sender]);
+    cars[msg.sender] = true;
   }
 
   function() payable {}
