@@ -70,3 +70,10 @@ if __name__ == '__main__':
 
             # deploy BatteryManagement
             bmgmt_address = deploy_contract('BatteryManagement', actor, [mgmt_address, erc20_address])
+
+            with open('database.json', 'w') as database_file:
+                json.dump({'mgmtContract': mgmt_address}, database_file)
+
+            print('Management contract: ' + mgmt_address)
+            print('Wallet contract: ' + spw_address)
+            print('Currency contract: ' + bmgmt_address)
