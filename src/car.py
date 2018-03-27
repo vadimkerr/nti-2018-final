@@ -20,6 +20,7 @@ if __name__ == '__main__':
     # parser args
     parser.add_argument('--new', action='store_true')
     parser.add_argument('--account', action='store_true')
+    parser.add_argument('--reg', action='store_true')
 
     args = parser.parse_args()
 
@@ -28,18 +29,21 @@ if __name__ == '__main__':
     w3.middleware_stack.inject(geth_poa_middleware, layer=0)
 
     if args.new:
-        private_key = randint(0, 2 ** 256 - 1).to_bytes(32, 'big')
-        address = w3.eth.account.privateKeyToAccount(private_key).address
+        private_key = w3.toHex(randint(0, 2 ** 256 - 1).to_bytes(32, 'big'))
+        address = w3.personal.importRawKey(private_key, '1234')
 
         with open('car.json', 'w') as car_file:
-            json.dump({'key': w3.toHex(private_key)[2:]}, car_file)
+            json.dump({'key': private_key[2:]}, car_file)
 
         print(address)
-    elif args.account:
+    else:
         with open('car.json') as car_file:
             config = json.load(car_file)
         private_key = '0x' + config['key']
 
         address = w3.eth.account.privateKeyToAccount(private_key).address
 
-        print(address)
+        if args.account:
+            print(address)
+
+
