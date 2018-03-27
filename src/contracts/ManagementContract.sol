@@ -40,7 +40,7 @@ contract ManagementContract is Ownable {
   function registerVendor(bytes _bytes) public payable {
     require(msg.value >= batteryFee.mul(1000));
     bytes4 _bytes4 = bytes4(keccak256(msg.sender, _bytes, block.number));
-    vendors[msg.sender].id = _bytes4;
+    vendors[msg.sender] = vendor(_bytes4, msg.value);
     Vendor(msg.sender, _bytes4);
   }
 
