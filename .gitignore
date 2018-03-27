@@ -2,3 +2,10 @@
 /build
 /truffle.js
 /package-lock.json
+/package.json
+/contracts
+/test
+/migrations
+/truffle-config.js
+*Interface*
+/src/contracts/ServiceProviderWallet.sol

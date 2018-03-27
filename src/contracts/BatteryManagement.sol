@@ -1,4 +1,4 @@
-pragma solidity^0.4.19;
+pragma solidity ^0.4.19;
 
 import "./BatteryManagementInterface.sol";
 import "./ManagementContract.sol";
@@ -8,7 +8,7 @@ contract BatteryManagement {
   event Transfer(address indexed, address indexed, bytes20);
   event Approval(address indexed, address indexed, bytes20);
   event NewDeal(address);
-  
+
   modifier onlyManager() {
     require(msg.sender == address(managementContract));
     _;
