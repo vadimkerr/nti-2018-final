@@ -54,7 +54,7 @@ if __name__ == '__main__':
 
         dev_account = w3.eth.accounts[0]
         # REMOVE BEFORE TEST
-        actor = dev_account
+        # actor = dev_account
 
         if args.setup:
             service_fee = int(float(args.setup) * (10 ** 18))

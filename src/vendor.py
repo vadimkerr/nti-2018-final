@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
         dev_account = w3.eth.accounts[0]
         # REMOVE BEFORE TEST
-        actor = dev_account
+        # actor = dev_account
 
         with open('database.json') as database_file:
             management_address = json.load(database_file)['mgmtContract']
