@@ -6,8 +6,7 @@ import argparse
 import json
 from solc import compile_files
 from web3.middleware import geth_poa_middleware
-from random import randint
-from binascii import unhexlify
+
 
 def get_abi(contract_name):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
