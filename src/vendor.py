@@ -1,11 +1,13 @@
 import warnings
 warnings.simplefilter("ignore", category=DeprecationWarning)
 
+import web3
 from web3 import Web3
 import argparse
 import json
 from solc import compile_files
 from web3.middleware import geth_poa_middleware
+from random import randint
 
 CONTRACT_DIR = './contracts/'
 
@@ -17,7 +19,6 @@ def str_to_bytes(value):
         return value
     return bytes(value, 'utf-8')
 
-
 def get_abi(contract_name):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
     return contract_compiled['abi']
@@ -27,6 +28,8 @@ if __name__ == '__main__':
     # parser args
     parser.add_argument('--new')
     parser.add_argument('--reg', nargs=2)
+    parser.add_argument('--bat')
+
 
     args = parser.parse_args()
 
@@ -70,8 +73,25 @@ if __name__ == '__main__':
             battery_fee = management_contract.functions.batteryFee().call()
 
             if fee >= battery_fee * 1000:
-                management_contract.functions.registerVendor(vendor_name).transact({'from': actor, 'value': fee})
+                tx_hash = management_contract.functions.registerVendor(vendor_name).transact({'from': actor, 'value': fee})
+
+                receipt = w3.eth.getTransactionReceipt(tx_hash)
+                new_vendor_id = management_contract.events.Vendor().processReceipt(receipt)[0]['args']['']
+
                 print('Success.')
-                print('Vendor ID: ', end='')
+                print('Vendor ID: ' + w3.toHex(new_vendor_id)[2:].lower())
             else:
                 print('Failed. Payment is low.')
+
+        elif args.bat:
+            batteries_number = int(args.bat)
+
+            batteries = []
+            for i in range(batteries_number):
+                new_private_key = randint(0, 2**256-1).to_bytes(32, 'big')
+                new_battery_id = w3.eth.account.privateKeyToAccount(new_private_key).address[2:]
+
+                batteries.append(new_battery_id)
+
+            battery_fee = management_contract.functions.batteryFee().call()
+            management_contract.functions.registerBatteries(batteries).transact({'from': actor, 'value': battery_fee * batteries_number})
