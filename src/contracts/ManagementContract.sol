@@ -30,8 +30,8 @@ contract ManagementContract is Ownable {
 
   mapping (address => vendor) vendors;
   mapping (bytes => bool) names;
-  mapping (address => bool) serviceCenters;
-  mapping (address => bool) cars;
+  mapping (address => bool) public serviceCenters;
+  mapping (address => bool) public cars;
 
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
     serviceProviderWallet = ServiceProviderWallet(_serviceProviderWallet);
