@@ -68,6 +68,7 @@ contract ManagementContract is Ownable {
 
   function registerBatteries(bytes20[] ids) public payable {
     require(vendors[msg.sender].id != "");
+    vendors[msg.sender].deposit.add(msg.value);
     uint256 amount = ids.length;
     require(vendors[msg.sender].deposit >= batfee.mul(vendors[msg.sender].fee));
     for (uint256 i = 0; i < amount; i++) {
@@ -93,9 +94,5 @@ contract ManagementContract is Ownable {
     cars[msg.sender] = true;
   }
 
-  function() payable {
-    if (vendors[msg.sender].id != "") {
-      vendors[msg.sender].deposit.add(msg.value);
-    }
-  }
+  function() payable {}
 }
