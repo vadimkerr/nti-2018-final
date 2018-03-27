@@ -13,8 +13,8 @@ contract ManagementContract is ManagementContractInterface, Ownable {
 
   mapping (address => bytes4) vendors;
 
-  function ManagementContract(address _currencyToken, uint256 _fee) {
-    serviceProviderWallet = ServiceProviderWallet(serviceProviderWallet);
+  function ManagementContract(address _serviceProviderWallet, uint256 _fee) {
+    serviceProviderWallet = ServiceProviderWallet(_serviceProviderWallet);
     fee = _fee;
   }
 
