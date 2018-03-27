@@ -70,7 +70,7 @@ contract ManagementContract is Ownable {
     require(vendors[msg.sender].id != "");
     vendors[msg.sender].deposit.add(msg.value);
     uint256 amount = ids.length;
-    require(vendors[msg.sender].deposit >= batfee.mul(vendors[msg.sender].fee));
+    require(vendors[msg.sender].deposit >= amount.mul(vendors[msg.sender].fee));
     for (uint256 i = 0; i < amount; i++) {
       batteryManagement.createBattery(msg.sender, ids[i]);
       vendors[msg.sender].deposit.sub(vendors[msg.sender].fee);
