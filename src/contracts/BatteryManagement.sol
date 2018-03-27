@@ -4,7 +4,11 @@ import "./BatteryManagementInterface.sol";
 import "./ManagementContract.sol";
 import "./ERC20.sol";
 
-contract BatteryManagement is BatteryManagementInterface {
+contract BatteryManagement {
+  event Transfer(address indexed, address indexed, bytes20);
+  event Approval(address indexed, address indexed, bytes20);
+  event NewDeal(address);
+  
   modifier onlyManager() {
     require(msg.sender == address(managementContract));
     _;

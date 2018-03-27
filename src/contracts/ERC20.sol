@@ -1,11 +1,14 @@
-pragma solidity ^0.4.19;
+pragma solidity^0.4.19;
 
 import "./ERC20TokenInterface.sol";
 import "./lib/SafeMath.sol";
 import "./lib/Ownable.sol";
 
-contract ERC20 is ERC20TokenInterface, Ownable {
+contract ERC20 is Ownable {
   using SafeMath for uint256;
+
+  event Transfer(address indexed, address indexed, uint256);
+	event Approval(address indexed, address indexed, uint256);
 
   mapping (address => mapping (address => uint256)) internal allowed;
 

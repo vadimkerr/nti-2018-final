@@ -6,7 +6,10 @@ import "./BatteryManagement.sol";
 import "./ServiceProviderWallet.sol";
 import "./ERC20.sol";
 
-contract ManagementContract is ManagementContractInterface, Ownable {
+contract ManagementContract is Ownable {
+  event Vendor(address, bytes4);
+  event NewBattery(bytes4, bytes20);
+  
   uint256 fee;
   ServiceProviderWallet public serviceProviderWallet;
   BatteryManagement public batteryManagement;
