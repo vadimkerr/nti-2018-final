@@ -8,6 +8,7 @@ import json
 from solc import compile_files
 from web3.middleware import geth_poa_middleware
 from random import randint
+from binascii import unhexlify
 
 CONTRACT_DIR = './contracts/'
 
@@ -28,7 +29,7 @@ if __name__ == '__main__':
     # parser args
     parser.add_argument('--new')
     parser.add_argument('--reg', nargs=2)
-    parser.add_argument('--bat')
+    parser.add_argument('--bat', nargs='+')
 
 
     args = parser.parse_args()
@@ -84,14 +85,27 @@ if __name__ == '__main__':
                 print('Failed. Payment is low.')
 
         elif args.bat:
-            batteries_number = int(args.bat)
+            batteries_number = int(args.bat[0])
 
-            batteries = []
-            for i in range(batteries_number):
-                new_private_key = randint(0, 2**256-1).to_bytes(32, 'big')
-                new_battery_id = w3.eth.account.privateKeyToAccount(new_private_key).address[2:]
+            try:
+                additional_deposit = int(float(args.bat[1]) * (10 ** 18))
+            except:
+                additional_deposit = 0
 
-                batteries.append(new_battery_id)
+            available_deposit = management_contract.functions.vendorDeposit(actor).call()
 
             battery_fee = management_contract.functions.batteryFee().call()
-            management_contract.functions.registerBatteries(batteries).transact({'from': actor, 'value': battery_fee * batteries_number})
+
+            if available_deposit > battery_fee * batteries_number:
+                batteries = []
+                for i in range(batteries_number):
+                    new_private_key = randint(0, 2 ** 256 - 1).to_bytes(32, 'big')
+                    new_battery_id = w3.eth.account.privateKeyToAccount(new_private_key).address[2:]
+                    new_battery_id = unhexlify(new_battery_id)
+                    batteries.append(new_battery_id)
+
+                management_contract.functions.registerBatteries(batteries).transact({'from': actor, 'value': additional_deposit})
+                for battery_id in batteries:
+                    print('Created battery with ID: ' + w3.toHex(battery_id)[2:])
+            else:
+                print('Failed. No enough funds to register object.')
