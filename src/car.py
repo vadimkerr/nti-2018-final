@@ -1,6 +1,7 @@
 import warnings
 warnings.simplefilter("ignore", category=DeprecationWarning)
 
+import web3
 from random import randint
 from web3 import Web3
 import argparse
@@ -12,6 +13,27 @@ from web3.middleware import geth_poa_middleware
 def get_abi(contract_name):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
     return contract_compiled['abi']
+
+
+def transfer(w3, privkey, to, value, data):
+    address = w3.eth.account.privateKeyToAccount(privkey).address
+    tx_dict = {
+        'nonce': w3.eth.getTransactionCount(address),
+        'to': to,
+        'value': value,
+        'data': data,
+        'gas': 100000,
+        'gasPrice': int(w3.eth.gasPrice),
+        'chainId': int(w3.net.version)
+    }
+    raw_tx = w3.eth.account.signTransaction(tx_dict, privkey)['rawTransaction']
+    try:
+        tx_hash = w3.eth.sendRawTransaction(raw_tx)
+    except:
+        return
+
+    tx_hash = Web3.toHex(tx_hash)
+    return tx_hash
 
 CONTRACT_DIR = './contracts/'
 
@@ -43,7 +65,19 @@ if __name__ == '__main__':
 
         address = w3.eth.account.privateKeyToAccount(private_key).address
 
+        with open('database.json') as database_file:
+            management_address = json.load(database_file)['mgmtContract']
+
+        management_contract = w3.eth.contract(management_address, abi=get_abi('ManagementContract'))
+
         if args.account:
             print(address)
+        elif args.reg:
+            car_exists = management_contract.functions.cars(address).call()
+            if not car_exists:
+                data = Web3.sha3(text="registerCar()")[:4]
 
-
+                transfer(w3, private_key, management_address, 0, data)
+                print('Registered successfully')
+            else:
+                print('Already registered')
