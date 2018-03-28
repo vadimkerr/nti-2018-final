@@ -309,9 +309,9 @@ def VendorRegOneBattery(_actor, _value=0):
 
     cur_balance = w3.eth.getBalance(walletContractAddress)
     wei_fee = w3.toWei(currentBatFee, 'ether')
-    wei_value = w3.toWei(value, 'ether')
+    wei_value = w3.toWei(_value, 'ether')
     
-    if not (prev_balance-wei_fee+wei_value == cur_balabnce):
+    if not (prev_balance-wei_fee+wei_value == cur_balance):
         printError("Wallet balance was not changed", _ret[1])
         return retval
     
