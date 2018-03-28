@@ -10,6 +10,10 @@ from web3.middleware import geth_poa_middleware
 CONTRACT_DIR = './contracts/'
 
 
+def get_abi(contract_name):
+    contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
+    return contract_compiled['abi']
+
 def deploy_contract(contract_name, account, args=[]):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
     contract = w3.eth.contract(abi=contract_compiled['abi'], bytecode=contract_compiled['bin'])
@@ -25,6 +29,7 @@ if __name__ == '__main__':
     # parser args
     parser.add_argument('--new')
     parser.add_argument('--setup')
+    parser.add_argument('--setfee')
 
     args = parser.parse_args()
 
@@ -73,3 +78,18 @@ if __name__ == '__main__':
             print('Management contract: ' + mgmt_address)
             print('Wallet contract: ' + spw_address)
             print('Currency contract: ' + bmgmt_address)
+
+        elif args.setfee:
+            new_fee = int(float(args.setfee) * (10 ** 18))
+
+            with open('database.json') as database_file:
+                management_address = json.load(database_file)['mgmtContract']
+
+            management_contract = w3.eth.contract(management_address, abi=get_abi('ManagementContract'))
+
+            owner = management_contract.functions.owner().call()
+            if actor == owner:
+                management_contract.functions.setFee(new_fee).transact({'from': actor})
+                print('Updated successfully')
+            else:
+                print('No permissions to change the service fee')
