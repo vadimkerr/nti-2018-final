@@ -11,3 +11,4 @@
 /src/contracts/ServiceProviderWallet.sol
 .idea*
 /commit.sh
+/src/contracts/lib/Ownable.sol
