@@ -52,10 +52,6 @@ if __name__ == '__main__':
         if not w3.personal.unlockAccount(actor, password):
             raise RuntimeError('Bad account or password!')
 
-        dev_account = w3.eth.accounts[0]
-        # REMOVE BEFORE TEST
-        # actor = dev_account
-
         if args.setup:
             service_fee = int(float(args.setup) * (10 ** 18))
 
