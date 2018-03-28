@@ -10,10 +10,10 @@ import "./ERC20.sol";
 contract ManagementContract is Ownable {
   using SafeMath for uint256;
 
-  modifier uniqueName(bytes _bytes) {
+  /* modifier uniqueName(bytes _bytes) {
     require(!names[_bytes]);
     _;
-  }
+  } */
 
   event Vendor(address, bytes4);
   event NewBattery(bytes4, bytes20);
@@ -29,9 +29,13 @@ contract ManagementContract is Ownable {
   BatteryManagement public batteryManagement;
 
   mapping (address => vendor) vendors;
-  mapping (bytes => bool) names;
+  mapping (bytes => bool) public names;
   mapping (address => bool) public serviceCenters;
   mapping (address => bool) public cars;
+
+  function uniqueName(bytes _name) public view {
+    return names[_name];
+  }
 
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
     serviceProviderWallet = ServiceProviderWallet(_serviceProviderWallet);
@@ -53,7 +57,7 @@ contract ManagementContract is Ownable {
     return batfee;
   }
 
-  function registerVendor(bytes _bytes) public payable uniqueName(_bytes) {
+  function registerVendor(bytes _bytes) public payable /*uniqueName(_bytes)*/ {
     require(msg.value >= registrationDeposit());
     require(vendors[msg.sender].id == "");
     bytes4 _bytes4 = bytes4(keccak256(msg.sender, _bytes, block.number));

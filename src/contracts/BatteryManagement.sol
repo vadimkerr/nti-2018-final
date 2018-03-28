@@ -3,6 +3,7 @@ pragma solidity ^0.4.19;
 import "./BatteryManagementInterface.sol";
 import "./ManagementContract.sol";
 import "./ERC20.sol";
+import "./Deal.sol";
 
 contract BatteryManagement {
   event Transfer(address indexed, address indexed, bytes20);
@@ -55,5 +56,25 @@ contract BatteryManagement {
 
   function vendorOf(bytes20 _id) public view returns (address) {
     return batteriesById[_id].vendor;
+  }
+
+  function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns (uint256, address) {
+    uint256 m = n * 2**32 + t;
+    address _id = ecrecover(keccak256(m), v, r, s);
+    return (999, batteriesById[_id].vendor);
+  }
+
+  function initiateDeal(
+      uint256 p,
+      bytes32 rO,
+      bytes32 sO,
+      bytes32 rN,
+      bytes32 sN,
+      address car,
+      uint256 amount
+      ) public {
+    // TODO: create Deal contract with constructor arguments(?)
+    Deal deal = new Deal();
+    NewDeal(address(deal);
   }
 }
