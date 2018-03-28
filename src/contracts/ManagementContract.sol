@@ -10,13 +10,14 @@ import "./ERC20.sol";
 contract ManagementContract is Ownable {
   using SafeMath for uint256;
 
-  /* modifier uniqueName(bytes _bytes) {
+  modifier uniqueName(bytes _bytes) {
     require(!names[_bytes]);
     _;
-  } */
+  }
 
   event Vendor(address, bytes4);
   event NewBattery(bytes4, bytes20);
+  event NewName(bytes);
 
   struct vendor {
     bytes4 id;
@@ -29,18 +30,9 @@ contract ManagementContract is Ownable {
   BatteryManagement public batteryManagement;
 
   mapping (address => vendor) vendors;
-  bytes[] names;
+  mapping (bytes => bool) names;
   mapping (address => bool) public serviceCenters;
   mapping (address => bool) public cars;
-
-  function uniqueName(bytes _name) public view returns (bool) {
-    for (uint256 i = 0; i < names.length; i++) {
-      if (names[i] == _name) {
-        return true;
-      }
-    }
-    return false;
-  }
 
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
     serviceProviderWallet = ServiceProviderWallet(_serviceProviderWallet);
@@ -62,12 +54,13 @@ contract ManagementContract is Ownable {
     return batfee;
   }
 
-  function registerVendor(bytes _bytes) public payable /*uniqueName(_bytes)*/ {
+  function registerVendor(bytes _bytes) public payable uniqueName(_bytes) {
     require(msg.value >= registrationDeposit());
     require(vendors[msg.sender].id == "");
     bytes4 _bytes4 = bytes4(keccak256(msg.sender, _bytes, block.number));
     vendors[msg.sender] = vendor(_bytes4, msg.value, batfee);
-    names.push(_bytes);
+    names[_bytes] = true;
+    NewName(_bytes);
     Vendor(msg.sender, _bytes4);
   }
 
