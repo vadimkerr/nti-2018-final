@@ -14,17 +14,46 @@ contract BatteryManagement {
     _;
   }
 
+  modifier batteryOwner(bytes20 _id) {
+    if (batteriesById[_id].owner == address(0)) {
+      require(msg.sender == batteriesById[_id].vendor);
+      _;
+    } else {
+      require(msg.sender == batteriesById[_id].owner);
+      _;
+    }
+  }
+
+  struct battery {
+    address vendor;
+    address owner;
+  }
+
   ManagementContract public managementContract;
   ERC20 public erc20;
 
-  mapping (address => bytes20[]) batteries;
+  mapping (bytes20 => battery) batteriesById;
 
   function BatteryManagement(address _managementContract, address _token) {
     managementContract = ManagementContract(_managementContract);
     erc20 = ERC20(_token);
   }
 
-  function createBattery(address vendor, bytes20 id) public onlyManager {
-    batteries[vendor].push(id);
+  function createBattery(address _vendor, bytes20 _id) public onlyManager {
+    batteriesById[_id].vendor = _vendor;
+  }
+
+  function transfer(address _newOwner, bytes20 _id) public batteryOwner(_id) {
+    batteriesById[_id].owner = _newOwner;
+    Transfer(batteriesById[_id].vendor, batteriesById[_id].owner, _id);
+  }
+
+  function ownerOf(bytes20 _id) public view returns (address) {
+    require(batteriesById[_id].owner != address(0));
+    return batteriesById[_id].owner;
+  }
+
+  function vendorOf(bytes20 _id) public view returns (address) {
+    return batteriesById[_id].vendor;
   }
 }
