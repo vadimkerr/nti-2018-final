@@ -34,6 +34,10 @@ contract ManagementContract is Ownable {
   mapping (address => bool) public serviceCenters;
   mapping (address => bool) public cars;
 
+  function isUnique() public view returns (bool) {
+    return (vendors[msg.sender].id == "");
+  }
+
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
     serviceProviderWallet = ServiceProviderWallet(_serviceProviderWallet);
     batfee = _batteryFee;
