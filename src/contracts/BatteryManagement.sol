@@ -75,6 +75,6 @@ contract BatteryManagement {
       ) public {
     // TODO: create Deal contract with constructor arguments(?)
     Deal deal = new Deal();
-    NewDeal(address(deal);
+    NewDeal(address(deal));
   }
 }

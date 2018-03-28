@@ -29,12 +29,17 @@ contract ManagementContract is Ownable {
   BatteryManagement public batteryManagement;
 
   mapping (address => vendor) vendors;
-  mapping (bytes => bool) public names;
+  bytes[] names;
   mapping (address => bool) public serviceCenters;
   mapping (address => bool) public cars;
 
-  function uniqueName(bytes _name) public view {
-    return names[_name];
+  function uniqueName(bytes _name) public view returns (bool) {
+    for (uint256 i = 0; i < names.length; i++) {
+      if (names[i] == _name) {
+        return true;
+      }
+    }
+    return false;
   }
 
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
@@ -62,7 +67,7 @@ contract ManagementContract is Ownable {
     require(vendors[msg.sender].id == "");
     bytes4 _bytes4 = bytes4(keccak256(msg.sender, _bytes, block.number));
     vendors[msg.sender] = vendor(_bytes4, msg.value, batfee);
-    names[_bytes] = true;
+    names.push(_bytes);
     Vendor(msg.sender, _bytes4);
   }
 
