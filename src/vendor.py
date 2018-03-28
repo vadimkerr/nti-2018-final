@@ -8,6 +8,12 @@ from solc import compile_files
 from web3.middleware import geth_poa_middleware
 from random import randint
 from binascii import unhexlify
+import decimal
+
+
+def format_number(num):
+    return str(num).rstrip('0').rstrip('.')
+
 
 CONTRACT_DIR = './contracts/'
 
@@ -29,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument('--new')
     parser.add_argument('--reg', nargs=2)
     parser.add_argument('--bat', nargs='+')
-
+    parser.add_argument('--regfee', action='store_true')
 
     args = parser.parse_args()
 
@@ -108,3 +114,7 @@ if __name__ == '__main__':
                     print('Created battery with ID: ' + w3.toHex(battery_id)[2:])
             else:
                 print('Failed. No enough funds to register object.')
+        elif args.regfee:
+            fee = int(management_contract.functions.registrationDeposit().call()) / (10 ** 18)
+
+            print('Vendor registration fee: ' + format_number(fee))
