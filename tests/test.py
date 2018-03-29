@@ -308,16 +308,26 @@ def VendorRegOneBattery(_actor, _value=0):
         return retval
 
     cur_balance = w3.eth.getBalance(walletContractAddress)
-    wei_fee = w3.toWei(currentBatFee, 'ether')
     wei_value = w3.toWei(_value, 'ether')
-    
-    if not (prev_balance-wei_fee+wei_value == cur_balance):
+
+    if not (prev_balance+wei_value == cur_balance):
         printError("Wallet balance was not changed", _ret[1])
         return retval
     
-    if (len(_ret[1]) == 0) or (len(_ret[1][0].strip()) != 42):
-        printError("No battery Id in the output", _ret[1])
-        return retval
+    if (len(_ret[1]) == 0):
+        printError("No output", _ret[1])
+    else:
+        bId = _ret[1][0].strip()[-39:]
+        try:
+            n = w3.toInt(hexstr=bId)
+        except ValueError:
+            printError("No battery Id in the output", _ret[1])
+        else:
+            h = w3.toHex(n)[2:]
+            retval = (h == bId)
+            if not (retval):
+                printError("No battery Id in the output", _ret[1])
+    return retval
 
     batId = _ret[1][0].strip()
 
