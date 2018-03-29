@@ -145,6 +145,7 @@ if __name__ == '__main__':
                 for i in range(batteries_number):
                     filename = w3.toHex(batteries[i])[2:10]
                     code = '_privkey = ' + str(private_keys[i])
+
                     with open('firmware/'+filename+'.py', 'w') as firmware_file:
                         firmware_file.write(code)
 
