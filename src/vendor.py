@@ -8,7 +8,7 @@ from solc import compile_files
 from web3.middleware import geth_poa_middleware
 from random import randint
 from binascii import unhexlify
-import decimal
+from web3.utils.transactions import wait_for_transaction_receipt
 
 
 def format_number(num):
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
             for log_entry in event_filter.get_all_entries():
                 tx_hash = log_entry['transactionHash']
-                receipt = w3.eth.getTransactionReceipt(tx_hash)
+                receipt = wait_for_transaction_receipt(w3, tx_hash)
                 registered_vendor = management_contract.events.NewName().processReceipt(receipt)[0]['args']['']
 
                 if registered_vendor == vendor_name:
@@ -90,7 +90,7 @@ if __name__ == '__main__':
                     exit(0)
 
             # checking if address is unique
-            unique_address = management_contract.functions.isUnique(vendor_name).call()
+            unique_address = management_contract.functions.isUnique().call()
             if not unique_address:
                 print('Failed. The vendor address already used.')
                 exit(0)
@@ -101,7 +101,7 @@ if __name__ == '__main__':
             if fee >= battery_fee * 1000:
                 tx_hash = management_contract.functions.registerVendor(vendor_name).transact({'from': actor, 'value': fee})
 
-                receipt = w3.eth.getTransactionReceipt(tx_hash)
+                receipt = wait_for_transaction_receipt(w3, tx_hash)
                 new_vendor_id = management_contract.events.Vendor().processReceipt(receipt)[0]['args']['']
 
                 print('Success.')
