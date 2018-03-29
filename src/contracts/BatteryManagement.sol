@@ -85,12 +85,6 @@ contract BatteryManagement {
       address car,
       uint256 amount
       ) public {
-    //uint256 nO = ;
-    // uint256 tO = ;
-    /* uint256 vO = uint256(uint24(p >> 96)); */
-    /* uint256 nN = ;
-    uint256 tN = ;  */
-    /* uint256 vN = uint256(uint8(p)); */
     // TODO: check if batteries are registered
     // TODO: check if owner of new_battery is legit scenter
     // TODO: check if owner of old_battery is legit car
@@ -99,11 +93,8 @@ contract BatteryManagement {
     // TODO: check if the car is the real owner of the battery
     uint256 mO = p >> 160 * 2**32 + uint256(uint32(p >> 128));
     uint256 mN = uint256(uint16(p >> 64)) * 2**32 + uint256(uint8(p >> 32));
-    /* bytes memory prefix = ; */
     bytes32 _prefixedHashO = keccak256("\19Ethereum Signed Message:\n32", keccak256(mO));
     bytes32 _prefixedHashN = keccak256("\19Ethereum Signed Message:\n32", keccak256(mN));
-    /* bytes20 _idO = ;
-    bytes20 _idN = ; */
     // TODO: change 0-es to actual variables
     Deal deal = new Deal(bytes20(ecrecover(_prefixedHashO, uint8(uint24(p >> 96)), rO, sO)), bytes20(ecrecover(_prefixedHashN, uint8(p), rN, sN)), address(erc20), 0, amount, 0);
     NewDeal(address(deal));
