@@ -1,11 +1,9 @@
 pragma solidity ^0.4.19;
 
-import "./ManagementContractInterface.sol";
 import "./lib/Ownable.sol";
 import "./lib/SafeMath.sol";
 import "./BatteryManagement.sol";
 import "./ServiceProviderWallet.sol";
-import "./ERC20.sol";
 
 contract ManagementContract is Ownable {
   using SafeMath for uint256;
@@ -17,6 +15,7 @@ contract ManagementContract is Ownable {
 
   event Vendor(address, bytes4);
   event NewBattery(bytes4, bytes20);
+  event NewName(bytes);
 
   struct vendor {
     bytes4 id;
@@ -25,16 +24,25 @@ contract ManagementContract is Ownable {
   }
 
   uint256 batfee;
-  ServiceProviderWallet public serviceProviderWallet;
+  ServiceProviderWallet public walletContract;
   BatteryManagement public batteryManagement;
 
-  mapping (address => vendor) vendors;
+  mapping (address => vendor) public vendors;
+  mapping (bytes4 => bytes) public vendorNames;
   mapping (bytes => bool) names;
   mapping (address => bool) public serviceCenters;
   mapping (address => bool) public cars;
+  // Custom method
+  function isUnique() public view returns (bool) {
+    return (vendors[msg.sender].id == "");
+  }
+
+  function vendorId(address _vendor) public view returns (bytes4) {
+    return vendors[_vendor].id;
+  }
 
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
-    serviceProviderWallet = ServiceProviderWallet(_serviceProviderWallet);
+    walletContract = ServiceProviderWallet(_serviceProviderWallet);
     batfee = _batteryFee;
   }
 
@@ -58,26 +66,33 @@ contract ManagementContract is Ownable {
     require(vendors[msg.sender].id == "");
     bytes4 _bytes4 = bytes4(keccak256(msg.sender, _bytes, block.number));
     vendors[msg.sender] = vendor(_bytes4, msg.value, batfee);
+    vendorNames[_bytes4] = _bytes;
     names[_bytes] = true;
+    NewName(_bytes);
     Vendor(msg.sender, _bytes4);
+    require(walletContract.send(msg.value));
   }
 
   function vendorDeposit(address _vendor) public view returns (uint256) {
+    require(vendors[_vendor].id != "");
     return vendors[_vendor].deposit;
   }
 
   function registerBatteries(bytes20[] ids) public payable {
     require(vendors[msg.sender].id != "");
-    vendors[msg.sender].deposit.add(msg.value);
+    if (msg.value > 0) {
+      address(walletContract).transfer(msg.value);
+      vendors[msg.sender].deposit = vendors[msg.sender].deposit.add(msg.value);
+    }
     uint256 amount = ids.length;
     uint256 totalCost = amount.mul(vendors[msg.sender].fee);
     require(vendors[msg.sender].deposit >= totalCost);
+
+    vendors[msg.sender].deposit = vendors[msg.sender].deposit.sub(totalCost);
     for (uint256 i = 0; i < amount; i++) {
       batteryManagement.createBattery(msg.sender, ids[i]);
-      vendors[msg.sender].deposit.sub(vendors[msg.sender].fee);
       NewBattery(vendors[msg.sender].id, ids[i]);
     }
-    require(serviceProviderWallet.send(totalCost));
   }
 
   function registrationDeposit() public view returns (uint256) {

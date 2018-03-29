@@ -6,25 +6,34 @@ import argparse
 import json
 from solc import compile_files
 from web3.middleware import geth_poa_middleware
+from web3.utils.transactions import wait_for_transaction_receipt
 
 CONTRACT_DIR = './contracts/'
 
 
-def deploy_contract(contract_name, account, args=[]):
+def get_abi(contract_name):
+    contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
+    return contract_compiled['abi']
+
+
+def deploy_contract(w3, contract_name, account, args=None):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
     contract = w3.eth.contract(abi=contract_compiled['abi'], bytecode=contract_compiled['bin'])
 
     tx_hash = contract.deploy(args=args, transaction={'from': account})
-    tx_receipt = w3.eth.getTransactionReceipt(tx_hash)
+    tx_receipt = wait_for_transaction_receipt(w3, tx_hash)
+
     contract_address = tx_receipt['contractAddress']
 
     return contract_address
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # parser args
     parser.add_argument('--new')
     parser.add_argument('--setup')
+    parser.add_argument('--setfee')
 
     args = parser.parse_args()
 
@@ -52,28 +61,44 @@ if __name__ == '__main__':
         if not w3.personal.unlockAccount(actor, password):
             raise RuntimeError('Bad account or password!')
 
-        dev_account = w3.eth.accounts[0]
-        # REMOVE BEFORE TEST
-        # actor = dev_account
-
         if args.setup:
             service_fee = int(float(args.setup) * (10 ** 18))
 
+            # deploy ERC20 token
+            erc20_address = deploy_contract(w3, 'ERC20', actor)
+
             # deploy ServiceProviderWallet
-            spw_address = deploy_contract('ServiceProviderWallet', actor)
+            spw_address = deploy_contract(w3, 'ServiceProviderWallet', actor)
 
             # deploy ManagementContract
-            mgmt_address = deploy_contract('ManagementContract', actor, [spw_address, service_fee])
-
-            # deploy ERC20 token
-            erc20_address = deploy_contract('ERC20', actor)
+            mgmt_address = deploy_contract(w3, 'ManagementContract', actor, [spw_address, service_fee])
 
             # deploy BatteryManagement
-            bmgmt_address = deploy_contract('BatteryManagement', actor, [mgmt_address, erc20_address])
+            bmgmt_address = deploy_contract(w3, 'BatteryManagement', actor, [mgmt_address, erc20_address])
+
+            management_contract = w3.eth.contract(mgmt_address, abi=get_abi('ManagementContract'))
+            tx_hash = management_contract.functions.setBatteryManagementContract(bmgmt_address).transact({'from': actor})
+            wait_for_transaction_receipt(w3, tx_hash)
 
             with open('database.json', 'w') as database_file:
                 json.dump({'mgmtContract': mgmt_address}, database_file)
 
             print('Management contract: ' + mgmt_address)
             print('Wallet contract: ' + spw_address)
-            print('Currency contract: ' + bmgmt_address)
+            print('Currency contract: ' + erc20_address)
+
+        elif args.setfee:
+            new_fee = int(float(args.setfee) * (10 ** 18))
+
+            with open('database.json') as database_file:
+                management_address = json.load(database_file)['mgmtContract']
+
+            management_contract = w3.eth.contract(management_address, abi=get_abi('ManagementContract'))
+
+            owner = management_contract.functions.owner().call()
+            if actor == owner:
+                tx_hash = management_contract.functions.setFee(new_fee).transact({'from': actor})
+                wait_for_transaction_receipt(w3, tx_hash)
+                print('Updated successfully')
+            else:
+                print('No permissions to change the service fee')

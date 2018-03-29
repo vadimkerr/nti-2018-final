@@ -6,7 +6,8 @@ import argparse
 import json
 from solc import compile_files
 from web3.middleware import geth_poa_middleware
-
+from web3.utils.transactions import wait_for_transaction_receipt
+import time
 
 def get_abi(contract_name):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
@@ -19,6 +20,7 @@ if __name__ == '__main__':
     # parser args
     parser.add_argument('--new')
     parser.add_argument('--reg', action='store_true')
+    parser.add_argument('--verify')
 
 
     args = parser.parse_args()
@@ -39,10 +41,14 @@ if __name__ == '__main__':
             json.dump(account_info, account_file)
         print(new_account)
     else:
-        with open('scenter.json') as scenter_file:
-            config = json.load(scenter_file)
-        actor = w3.toChecksumAddress(config['account'])
-        password = config['password']
+        try:
+            with open('scenter.json') as scenter_file:
+                config = json.load(scenter_file)
+            actor = w3.toChecksumAddress(config['account'])
+            password = config['password']
+        except:
+            actor = w3.toChecksumAddress(w3.eth.accounts[0])
+            password = ''
 
         if not w3.personal.unlockAccount(actor, password):
             raise RuntimeError('Bad account or password!')
@@ -59,7 +65,60 @@ if __name__ == '__main__':
         if args.reg:
             sc_exists = management_contract.functions.serviceCenters(actor).call()
             if not sc_exists:
-                management_contract.functions.registerServiceCenter().transact({'from': actor})
+                tx_hash = management_contract.functions.registerServiceCenter().transact({'from': actor})
+                wait_for_transaction_receipt(w3, tx_hash)
                 print('Registered successfully')
             else:
                 print('Already registered')
+        elif args.verify:
+            path = args.verify
+
+            with open(path) as src_file:
+                privkey_line = src_file.read().split('\n')[0]
+                privkey_str = privkey_line.split('=')[1][1:]
+                privkey = int(privkey_str).to_bytes(32, 'big')
+
+            json_path = path[:-2]+'json'
+
+            try:
+                with open(json_path) as json_file:
+                    storage = json.load(json_file)
+            except:
+                storage = {'n': 0}
+
+            n = storage['n']
+            t = int(time.time())
+
+            m = n * 2 ** 32 + t
+
+            signed_msg = w3.eth.account.privateKeyToAccount(privkey).sign(m)
+
+            v = signed_msg['v']
+            r = hex(signed_msg['r'])[2:]
+            s = hex(signed_msg['s'])[2:]
+
+            with open('database.json') as database_file:
+                management_address = json.load(database_file)['mgmtContract']
+
+            management_contract = w3.eth.contract(management_address, abi=get_abi('ManagementContract'))
+
+            battery_management_address = w3.toChecksumAddress(management_contract.functions.batteryManagement().call())
+            battery_management_contract = w3.eth.contract(battery_management_address, abi=get_abi('BatteryManagement'))
+
+            response, address = battery_management_contract.functions.verifyBattery(n, t, v, r, s).call()
+            vendor_address = battery_management_contract.functions.vendorOf(address).call()
+
+            vendor_id = management_contract.functions.vendors(vendor_address).call()[0]
+            vendor_name = management_contract.functions.vendorNames(vendor_id).call()
+
+            print(n, t, v, r, s)
+
+            if response == 0:
+                print("Verified successfully.\nTotal charges: %i\nVendor ID: %s\nVendor Name: %s", n, address,
+                      vendor_name)
+            elif response == 1:
+                print("Battery with the same status already replaced. Probably the battery forged.")
+            elif response == 2:
+                print("Verifiсation failed. Probably the battery forged.")
+            elif response == 999:
+                print("Verifiсation failed. Probably the battery forged.")
