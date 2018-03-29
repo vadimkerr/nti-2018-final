@@ -34,7 +34,7 @@ contract BatteryManagement {
   ManagementContract public managementContract;
   ERC20 public erc20;
 
-  mapping (bytes20 => battery) batteriesById;
+  mapping (bytes20 => battery) public batteriesById;
   mapping (bytes32 => bool) history;
 
   function BatteryManagement(address _managementContract, address _token) {
@@ -89,19 +89,26 @@ contract BatteryManagement {
       address car,
       uint256 amount
       ) public {
-    // TODO: check if batteries are registered
-    // TODO: check if owner of new_battery is legit scenter
-    // TODO: check if owner of old_battery is legit car
-    // TODO: check if msg.sender is legit scenter
-    // TODO: check if scenter is the oner of any amount of batteries
-    // TODO: check if the car is the real owner of the battery
-    uint256 mO = p >> 160 * 2**32 + uint256(uint32(p >> 128));
-    uint256 mN = uint256(uint16(p >> 64)) * 2**32 + uint256(uint8(p >> 32));
-    bytes32 _prefixedHashO = keccak256("\19Ethereum Signed Message:\n32", keccak256(mO));
-    bytes32 _prefixedHashN = keccak256("\19Ethereum Signed Message:\n32", keccak256(mN));
+    require(managementContract.serviceCenters(msg.sender));
+    require(managementContract.cars(car));
+
+    bytes32 _prefixedHashO = keccak256("\19Ethereum Signed Message:\n32", keccak256(calculate(p >> 160, uint256(uint32(p >> 128)))));
+    bytes32 _prefixedHashN = keccak256("\19Ethereum Signed Message:\n32", keccak256(calculate(uint256(uint16(p >> 64)), uint256(uint8(p >> 32)))));
+
+    bytes20 _addressO = bytes20(ecrecover(_prefixedHashO, uint8(uint24(p >> 96)), rO, sO));
+    bytes20 _addressN = bytes20(ecrecover(_prefixedHashN, uint8(p), rN, sN));
+
+    require(isBattery(address(_addressO)) && isBattery(address(_addressN)));
+    require(batteriesById[_addressO].owner == car);
+    require(batteriesById[_addressN].owner == msg.sender);
+
     // TODO: change 0-es to actual variables
-    Deal deal = new Deal(bytes20(ecrecover(_prefixedHashO, uint8(uint24(p >> 96)), rO, sO)), bytes20(ecrecover(_prefixedHashN, uint8(p), rN, sN)), address(erc20), 0, amount, 0);
+    Deal deal = new Deal(_addressO, _addressN, address(erc20), 0, amount, 0);
     NewDeal(address(deal));
+  }
+
+  function calculate(uint256 n, uint256 t) internal pure returns (uint256) {
+    return n * 2**32 + t;
   }
 
   function isBattery(address _id) internal view returns (bool) {
