@@ -9,10 +9,14 @@ from web3.middleware import geth_poa_middleware
 from random import randint
 from binascii import unhexlify
 from web3.utils.transactions import wait_for_transaction_receipt
+import os
 
 
 def format_number(num):
-    return str(num).rstrip('0').rstrip('.')
+    if num % 1:
+        return str(num).rstrip('0').rstrip('.')
+
+    return str(int(num))
 
 
 CONTRACT_DIR = './contracts/'
@@ -38,6 +42,7 @@ if __name__ == '__main__':
     parser.add_argument('--regfee', action='store_true')
     parser.add_argument('--batfee', action='store_true')
     parser.add_argument('--deposit', action='store_true')
+    parser.add_argument('--owner', nargs=2)
 
     args = parser.parse_args()
 
@@ -125,12 +130,25 @@ if __name__ == '__main__':
 
             if available_deposit > battery_fee * batteries_number:
                 batteries = []
+                private_keys = []
                 for i in range(batteries_number):
                     new_private_key = randint(0, 2 ** 256 - 1).to_bytes(32, 'big')
                     new_battery_id = w3.eth.account.privateKeyToAccount(new_private_key).address[2:]
                     new_battery_id = unhexlify(new_battery_id)
                     batteries.append(new_battery_id)
+                    private_keys.append(new_private_key)
 
+                # create firmware files
+                if not os.path.exists('firmware'):
+                    os.makedirs('firmware')
+
+                for i in range(batteries_number):
+                    filename = w3.toHex(batteries[i])[2:10]
+                    code = '_privkey = ' + str(private_keys[i])
+                    with open('firmware/'+filename+'.py', 'w') as firmware_file:
+                        firmware_file.write(code)
+
+                # WILL NOT WORK WITH GREAT NUMBER OF BATTERIES!!!
                 tx_hash = management_contract.functions.registerBatteries(batteries).transact({'from': actor, 'value': additional_deposit})
                 wait_for_transaction_receipt(w3, tx_hash)
                 for battery_id in batteries:
@@ -154,3 +172,21 @@ if __name__ == '__main__':
             deposit = int(management_contract.functions.vendorDeposit(actor).call()) / (10 ** 18)
 
             print('Deposit: ' + format_number(deposit))
+        elif args.owner:
+            battery_id = args.owner[0]
+            new_owner = w3.toChecksumAddress(args.owner[1])
+
+            battery_management_address = w3.toChecksumAddress(management_contract.functions.batteryManagement().call())
+            battery_management_contract = w3.eth.contract(battery_management_address, abi=get_abi('BatteryManagement'))
+
+            battery_id = unhexlify(battery_id)
+
+            owner = battery_management_contract.functions.ownerOf(battery_id).call()
+
+            if actor == owner:
+                tx_hash = battery_management_contract.functions.transfer(new_owner, battery_id).transact({'from': actor})
+                wait_for_transaction_receipt(w3, tx_hash)
+
+                print('Success')
+            else:
+                print('Failed. Not allowed to change ownership.')
