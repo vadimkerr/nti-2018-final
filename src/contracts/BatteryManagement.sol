@@ -105,12 +105,17 @@ contract BatteryManagement {
 
     address _addressO;
     address _addressN;
+
     (, _addressO) = verifyBattery(p >> 160, uint256(uint32(p >> 128)), uint8(uint24(p >> 96)), rO, sO);
     (,_addressN) = verifyBattery(uint256(uint16(p >> 64)), uint256(uint8(p >> 32)), uint8(p), rN, sN);
 
+    require(_addressO != address(0) && _addressN != address(0));
     require(batteriesById[bytes20(_addressO)].owner == car);
     require(batteriesById[bytes20(_addressN)].owner == msg.sender);
     require(!batteriesById[bytes20(_addressO)].inDeal && !batteriesById[bytes20(_addressN)].inDeal);
+
+    batteriesById[bytes20(_addressO)].charges = p >> 160;
+    batteriesById[bytes20(_addressN)].charges = uint256(uint16(p >> 64));
 
     history[bytes20(_addressO)] = true;
     history[bytes20(_addressN)] = true;
