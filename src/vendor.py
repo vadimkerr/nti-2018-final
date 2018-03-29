@@ -76,6 +76,26 @@ if __name__ == '__main__':
             vendor_name = str_to_bytes(args.reg[0])
             fee = int(float(args.reg[1]) * (10 ** 18))
 
+            # checking if name unique or not
+            event_signature_hash = w3.toHex(w3.sha3(text="NewName(bytes)"))
+            event_filter = w3.eth.filter({"address": management_address, 'topics': [event_signature_hash]})
+
+            for log_entry in event_filter.get_all_entries():
+                tx_hash = log_entry['transactionHash']
+                receipt = w3.eth.getTransactionReceipt(tx_hash)
+                registered_vendor = management_contract.events.NewName().processReceipt(receipt)[0]['args']['']
+
+                if registered_vendor == vendor_name:
+                    print('Failed. The vendor name is not unique.')
+                    exit(0)
+
+            # checking if address is unique
+            unique_address = management_contract.functions.isUnique(vendor_name).call()
+            if not unique_address:
+                print('Failed. The vendor address already used.')
+                exit(0)
+
+            # registration
             battery_fee = management_contract.functions.batteryFee().call()
 
             if fee >= battery_fee * 1000:
