@@ -79,12 +79,13 @@ contract ManagementContract is Ownable {
   function registerBatteries(bytes20[] ids) public payable {
     require(vendors[msg.sender].id != "");
     if (msg.value > 0) {
-      require(walletContract.send(msg.value));
+      address(walletContract).transfer(msg.value);
+      vendors[msg.sender].deposit.add(msg.value);
     }
-    vendors[msg.sender].deposit.add(msg.value);
     uint256 amount = ids.length;
     uint256 totalCost = amount.mul(vendors[msg.sender].fee);
     require(vendors[msg.sender].deposit >= totalCost);
+
     vendors[msg.sender].deposit.sub(totalCost);
     for (uint256 i = 0; i < amount; i++) {
       batteryManagement.createBattery(msg.sender, ids[i]);
