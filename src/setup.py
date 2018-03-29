@@ -97,7 +97,8 @@ if __name__ == '__main__':
 
             owner = management_contract.functions.owner().call()
             if actor == owner:
-                management_contract.functions.setFee(new_fee).transact({'from': actor})
+                tx_hash = management_contract.functions.setFee(new_fee).transact({'from': actor})
+                wait_for_transaction_receipt(w3, tx_hash)
                 print('Updated successfully')
             else:
                 print('No permissions to change the service fee')

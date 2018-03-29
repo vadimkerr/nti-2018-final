@@ -33,7 +33,7 @@ contract ManagementContract is Ownable {
   mapping (address => bool) public cars;
 
   function isUnique() public view returns (bool) {
-    return (vendors[msg.sender].id == "");
+    return (vendors[msg.sender].id == 0x0);
   }
 
   function vendorId(address _vendor) public view returns (bytes4) {
@@ -80,13 +80,13 @@ contract ManagementContract is Ownable {
     require(vendors[msg.sender].id != "");
     if (msg.value > 0) {
       address(walletContract).transfer(msg.value);
-      vendors[msg.sender].deposit.add(msg.value);
+      vendors[msg.sender].deposit = vendors[msg.sender].deposit.add(msg.value);
     }
     uint256 amount = ids.length;
     uint256 totalCost = amount.mul(vendors[msg.sender].fee);
     require(vendors[msg.sender].deposit >= totalCost);
 
-    vendors[msg.sender].deposit.sub(totalCost);
+    vendors[msg.sender].deposit = vendors[msg.sender].deposit.sub(totalCost);
     for (uint256 i = 0; i < amount; i++) {
       batteryManagement.createBattery(msg.sender, ids[i]);
       NewBattery(vendors[msg.sender].id, ids[i]);
