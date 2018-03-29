@@ -36,6 +36,8 @@ if __name__ == '__main__':
     parser.add_argument('--reg', nargs=2)
     parser.add_argument('--bat', nargs='+')
     parser.add_argument('--regfee', action='store_true')
+    parser.add_argument('--batfee', action='store_true')
+    parser.add_argument('--deposit', action='store_true')
 
     args = parser.parse_args()
 
@@ -76,6 +78,12 @@ if __name__ == '__main__':
             vendor_name = str_to_bytes(args.reg[0])
             fee = int(float(args.reg[1]) * (10 ** 18))
 
+            # checking if address is unique
+            unique_address = management_contract.functions.isUnique().call({'from': actor})
+            if not unique_address:
+                print('Failed. The vendor address already used.')
+                exit(0)
+
             # checking if name unique or not
             event_signature_hash = w3.toHex(w3.sha3(text="NewName(bytes)"))
             event_filter = w3.eth.filter({"address": management_address, 'topics': [event_signature_hash]})
@@ -88,12 +96,6 @@ if __name__ == '__main__':
                 if registered_vendor == vendor_name:
                     print('Failed. The vendor name is not unique.')
                     exit(0)
-
-            # checking if address is unique
-            unique_address = management_contract.functions.isUnique().call()
-            if not unique_address:
-                print('Failed. The vendor address already used.')
-                exit(0)
 
             # registration
             battery_fee = management_contract.functions.batteryFee().call()
@@ -117,7 +119,6 @@ if __name__ == '__main__':
             else:
                 additional_deposit = 0
 
-
             available_deposit = management_contract.functions.vendorDeposit(actor).call()
 
             battery_fee = management_contract.functions.batteryFee().call()
@@ -140,3 +141,16 @@ if __name__ == '__main__':
             fee = int(management_contract.functions.registrationDeposit().call()) / (10 ** 18)
 
             print('Vendor registration fee: ' + format_number(fee))
+        elif args.batfee:
+            battery_fee = int(management_contract.functions.batteryFee().call({'from': actor})) / (10 ** 18)
+
+            print('Production fee per one battery: ' + format_number(battery_fee))
+        elif args.deposit:
+            vendor_id = management_contract.functions.vendorId(actor).call()
+            if vendor_id == b'\x00\x00\x00\x00':
+                print('Vendor account is not registered.')
+                exit(0)
+
+            deposit = int(management_contract.functions.vendorDeposit(actor).call()) / (10 ** 18)
+
+            print('Deposit: ' + format_number(deposit))

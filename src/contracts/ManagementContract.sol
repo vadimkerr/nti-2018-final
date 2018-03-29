@@ -34,7 +34,7 @@ contract ManagementContract is Ownable {
   mapping (address => bool) public cars;
   // Custom method
   function isUnique() public view returns (bool) {
-    return (vendors[msg.sender].id == "");
+    return (vendors[msg.sender].id == 0x0);
   }
 
   function vendorId(address _vendor) public view returns (bytes4) {
