@@ -29,27 +29,27 @@ c:\Anaconda3\python.exe car.py --new
    - the node is run with `miner` process turned off in order to reduce cpu resources
      usage, the test script is responsible to turn the transaction validation and
      block sealing process when it is required by tests.
-   - the test script sets up `WEB3_PROVIDER_URI` prior to invoke `identity.py` script
+   - the test script sets up `WEB3_PROVIDER_URI` prior to invoke scripts
      from `src` directory.
    - if your solution uses py-solc module to complile Solidity contracts please
      make sure that directory containing `solc` tool is in PATH environment variable
-     or `SOLC_BINARY` is set prior to `do_tests` is run.
+     or `SOLC_BINARY` is set prior to `do_test` is run.
    
    Below you can find different examples to run `do_tests`:
 
 On Linux, py-solc is not used or `solc` is in PATH:
 ```
-$ ./do_tests.sh /opt/geth/geth /opt/anaconda3/bin/python
+$ ./do_test.sh /opt/geth/geth /opt/anaconda3/bin/python
 ```
 
 On Linux, specify path to `solc` explicitly:
 ```
-$ env SOLC_BINARY=/opt/solidity/solc ./do_tests.sh /opt/geth/geth /opt/anaconda3/bin/python
+$ env SOLC_BINARY=/opt/solidity/solc ./do_test.sh /opt/geth/geth /opt/anaconda3/bin/python
 ```
 
 On Windows:
 ```
-do_tests.cmd "c:\Program Files\Geth\geth.exe" "c:\Anaconda3\python.exe"
+do_test.cmd "c:\Program Files\Geth\geth.exe" "c:\Anaconda3\python.exe"
 ```
 
 4. Look at the passed and failed tests to find how close you to the final solution.
