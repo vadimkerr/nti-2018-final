@@ -1,11 +1,9 @@
 pragma solidity ^0.4.19;
 
-import "./ManagementContractInterface.sol";
 import "./lib/Ownable.sol";
 import "./lib/SafeMath.sol";
 import "./BatteryManagement.sol";
 import "./ServiceProviderWallet.sol";
-import "./ERC20.sol";
 
 contract ManagementContract is Ownable {
   using SafeMath for uint256;
@@ -26,7 +24,7 @@ contract ManagementContract is Ownable {
   }
 
   uint256 batfee;
-  ServiceProviderWallet public serviceProviderWallet;
+  ServiceProviderWallet public walletContract;
   BatteryManagement public batteryManagement;
 
   mapping (address => vendor) vendors;
@@ -38,8 +36,12 @@ contract ManagementContract is Ownable {
     return (vendors[msg.sender].id == "");
   }
 
+  function vendorId(address _vendor) public view returns (bytes4) {
+    return vendors[_vendor].id;
+  }
+
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
-    serviceProviderWallet = ServiceProviderWallet(_serviceProviderWallet);
+    walletContract = ServiceProviderWallet(_serviceProviderWallet);
     batfee = _batteryFee;
   }
 
@@ -66,6 +68,7 @@ contract ManagementContract is Ownable {
     names[_bytes] = true;
     NewName(_bytes);
     Vendor(msg.sender, _bytes4);
+    require(walletContract.send(msg.value));
   }
 
   function vendorDeposit(address _vendor) public view returns (uint256) {
@@ -84,7 +87,7 @@ contract ManagementContract is Ownable {
       vendors[msg.sender].deposit.sub(vendors[msg.sender].fee);
       NewBattery(vendors[msg.sender].id, ids[i]);
     }
-    require(serviceProviderWallet.send(totalCost));
+    require(walletContract.send(totalCost));
   }
 
   function registrationDeposit() public view returns (uint256) {
