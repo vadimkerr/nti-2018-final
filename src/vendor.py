@@ -146,6 +146,51 @@ if __name__ == '__main__':
                     filename = w3.toHex(batteries[i])[2:10]
                     code = '_privkey = ' + str(private_keys[i])
 
+                    code += '''\nimport web3
+import json
+import argparse
+import time
+
+w3 = web3.Web3()
+storage_name = w3.eth.account.privateKeyToAccount(_privkey).address[2:10].lower()
+
+try:
+    open(storage_name+'.json', 'r')
+except:
+    storage = open(storage_name+'.json', 'w')
+    storage.write('{"n": 0}')
+    storage.close()
+
+parser = argparse.ArgumentParser()
+# parser args
+parser.add_argument('--charge', action='store_true')
+parser.add_argument('--get', action='store_true')
+
+args = parser.parse_args()
+
+with open(storage_name+'.json') as storage_file:
+    storage = json.load(storage_file)
+
+if args.charge:
+    storage['n'] += 1
+
+    with open(storage_name + '.json', 'w') as storage_file:
+        json.dump(storage, storage_file)
+
+elif args.get:
+    n = storage['n']
+    t = int(time.time())
+
+    m = n * 2**32 + t
+
+    signed_msg = w3.eth.account.privateKeyToAccount(_privkey).sign(m)
+
+    print(n)
+    print(t)
+    print(signed_msg['v'])
+    print(hex(signed_msg['r'])[2:])
+    print(hex(signed_msg['s'])[2:])'''
+
                     with open('firmware/'+filename+'.py', 'w') as firmware_file:
                         firmware_file.write(code)
 
