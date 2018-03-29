@@ -60,6 +60,10 @@ contract BatteryManagement {
     return batteriesById[_id].vendor;
   }
 
+  function chargesNumber(bytes20 _id) public view returns (uint256) {
+    return batteriesById[_id].charges;
+  }
+
   function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns (uint256, address) {
     uint256 m = n * 2**32 + t;
     bytes memory prefix = "\19Ethereum Signed Message:\n32";
@@ -106,9 +110,5 @@ contract BatteryManagement {
 
   function inHistory(bytes32 _hash) internal view returns (bool) {
     return history[_hash];
-  }
-
-  function chargesNumber(bytes20 _id) public view returns (uint256) {
-    return batteriesById[_id].charges;
   }
 }
