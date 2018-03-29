@@ -112,10 +112,11 @@ if __name__ == '__main__':
         elif args.bat:
             batteries_number = int(args.bat[0])
 
-            try:
+            if len(args.bat) > 1:
                 additional_deposit = int(float(args.bat[1]) * (10 ** 18))
-            except:
+            else:
                 additional_deposit = 0
+
 
             available_deposit = management_contract.functions.vendorDeposit(actor).call()
 
@@ -129,7 +130,8 @@ if __name__ == '__main__':
                     new_battery_id = unhexlify(new_battery_id)
                     batteries.append(new_battery_id)
 
-                management_contract.functions.registerBatteries(batteries).transact({'from': actor, 'value': additional_deposit})
+                tx_hash = management_contract.functions.registerBatteries(batteries).transact({'from': actor, 'value': additional_deposit})
+                wait_for_transaction_receipt(w3, tx_hash)
                 for battery_id in batteries:
                     print('Created battery with ID: ' + w3.toHex(battery_id)[2:])
             else:

@@ -7,7 +7,7 @@ import argparse
 import json
 from solc import compile_files
 from web3.middleware import geth_poa_middleware
-
+from web3.utils.transactions import wait_for_transaction_receipt
 
 def get_abi(contract_name):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
@@ -16,8 +16,6 @@ def get_abi(contract_name):
 
 def transfer(w3, privkey, to, value, data):
     address = w3.eth.account.privateKeyToAccount(privkey).address
-
-    print(privkey, address, to)
 
     tx_dict = {
         'nonce': w3.eth.getTransactionCount(address),
@@ -33,6 +31,9 @@ def transfer(w3, privkey, to, value, data):
 
     tx_hash = w3.eth.sendRawTransaction(raw_tx)
     tx_hash = Web3.toHex(tx_hash)
+
+    wait_for_transaction_receipt(w3, tx_hash)
+
     return tx_hash
 
 CONTRACT_DIR = './contracts/'

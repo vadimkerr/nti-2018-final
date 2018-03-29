@@ -85,9 +85,9 @@ contract ManagementContract is Ownable {
     uint256 amount = ids.length;
     uint256 totalCost = amount.mul(vendors[msg.sender].fee);
     require(vendors[msg.sender].deposit >= totalCost);
+    vendors[msg.sender].deposit.sub(totalCost);
     for (uint256 i = 0; i < amount; i++) {
       batteryManagement.createBattery(msg.sender, ids[i]);
-      vendors[msg.sender].deposit.sub(vendors[msg.sender].fee);
       NewBattery(vendors[msg.sender].id, ids[i]);
     }
   }
