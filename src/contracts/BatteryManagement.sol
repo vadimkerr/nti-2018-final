@@ -25,6 +25,11 @@ contract BatteryManagement {
     }
   }
 
+  modifier registered(address _who) {
+    require(managementContract.serviceCenters(_who) || managementContract.cars(_who));
+    _;
+  }
+
   struct battery {
     address vendor;
     address owner;
@@ -43,17 +48,21 @@ contract BatteryManagement {
   }
 
   function createBattery(address _vendor, bytes20 _id) public onlyManager {
+    require(batteriesById[_id].vendor == address(0));
     batteriesById[_id].vendor = _vendor;
   }
 
-  function transfer(address _newOwner, bytes20 _id) public batteryOwner(_id) {
+  function transfer(address _newOwner, bytes20 _id) public batteryOwner(_id) registered(_newOwner) {
     batteriesById[_id].owner = _newOwner;
     Transfer(batteriesById[_id].vendor, batteriesById[_id].owner, _id);
   }
 
   function ownerOf(bytes20 _id) public view returns (address) {
-    require(batteriesById[_id].owner != address(0));
-    return batteriesById[_id].owner;
+    if (batteriesById[_id].owner == address(0)) {
+      return batteriesById[_id].vendor;
+    } else {
+      return batteriesById[_id].owner;
+    }
   }
 
   function vendorOf(bytes20 _id) public view returns (address) {
@@ -63,7 +72,7 @@ contract BatteryManagement {
   function chargesNumber(bytes20 _id) public view returns (uint256) {
     return batteriesById[_id].charges;
   }
-
+  // check this method
   function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns (uint256, address) {
     uint256 m = n * 2**32 + t;
     bytes memory prefix = "\19Ethereum Signed Message:\n32";
