@@ -27,7 +27,7 @@ contract ManagementContract is Ownable {
   ServiceProviderWallet public walletContract;
   BatteryManagement public batteryManagement;
 
-  mapping (address => vendor) vendors;
+  mapping (address => vendor) public vendors;
   mapping (bytes4 => bytes) public vendorNames;
   mapping (bytes => bool) names;
   mapping (address => bool) public serviceCenters;
