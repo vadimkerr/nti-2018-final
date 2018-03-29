@@ -36,6 +36,10 @@ contract ManagementContract is Ownable {
     return (vendors[msg.sender].id == "");
   }
 
+  function vendorId(address _vendor) public view returns (bytes4) {
+    return vendors[_vendor].id;
+  }
+
   function ManagementContract(address _serviceProviderWallet, uint256 _batteryFee) {
     walletContract = ServiceProviderWallet(_serviceProviderWallet);
     batfee = _batteryFee;
@@ -64,6 +68,7 @@ contract ManagementContract is Ownable {
     names[_bytes] = true;
     NewName(_bytes);
     Vendor(msg.sender, _bytes4);
+    require(walletContract.send(msg.value));
   }
 
   function vendorDeposit(address _vendor) public view returns (uint256) {

@@ -60,14 +60,14 @@ contract BatteryManagement {
     return batteriesById[_id].vendor;
   }
 
-  /* function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns (uint256, address) {
+  function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns (uint256, address) {
     uint256 m = n * 2**32 + t;
     bytes memory prefix = "\19Ethereum Signed Message:\n32";
     bytes32 _hash = keccak256(m);
     bytes32 prefixedHash = keccak256(prefix, _hash);
     address _id = ecrecover(prefixedHash, v, r, s);
     if (isBattery(_id)) {
-      return (0, batteriesById[_id].vendor);
+      return (0, batteriesById[bytes20(_id)].vendor);
     } else if (inHistory(keccak256(m))) {
       return (1, address(0));
     } else if (!isBattery(_id)) {
@@ -85,29 +85,27 @@ contract BatteryManagement {
       address car,
       uint256 amount
       ) public {
-    uint256 nO = p >> 160;
-    uint256 tO = uint256(uint32(p >> 128));
-    uint256 vO = uint256(uint24(p >> 96));
-    uint256 nN = uint256(uint16(p >> 64));
-    uint256 tN = uint256(uint8(p >> 32));
-    uint256 vN = uint256(uint8(p));
+    //uint256 nO = ;
+    // uint256 tO = ;
+    /* uint256 vO = uint256(uint24(p >> 96)); */
+    /* uint256 nN = ;
+    uint256 tN = ;  */
+    /* uint256 vN = uint256(uint8(p)); */
     // TODO: check if batteries are registered
     // TODO: check if owner of new_battery is legit scenter
     // TODO: check if owner of old_battery is legit car
     // TODO: check if msg.sender is legit scenter
     // TODO: check if scenter is the oner of any amount of batteries
     // TODO: check if the car is the real owner of the battery
-    uint256 mO = nO * 2**32 + tO;
-    uint256 mN = nN * 2**32 + tN;
-    bytes memory prefix = "\19Ethereum Signed Message:\n32";
-    bytes32 _hashO = keccak256(mO);
-    bytes32 _hashN = keccak256(mN);
-    bytes32 _prefixedHashO = keccak256(prefix, _hashO);
-    bytes32 _prefixedHashN = keccak256(prefix, _hashN);
-    bytes20 _idO = ecrecover(_prefixedHashO, vO, rO, sO);
-    bytes20 _idN = ecrecover(_prefixedHashN, vN, rN, sN);
+    uint256 mO = p >> 160 * 2**32 + uint256(uint32(p >> 128));
+    uint256 mN = uint256(uint16(p >> 64)) * 2**32 + uint256(uint8(p >> 32));
+    /* bytes memory prefix = ; */
+    bytes32 _prefixedHashO = keccak256("\19Ethereum Signed Message:\n32", keccak256(mO));
+    bytes32 _prefixedHashN = keccak256("\19Ethereum Signed Message:\n32", keccak256(mN));
+    /* bytes20 _idO = ;
+    bytes20 _idN = ; */
     // TODO: change 0-es to actual variables
-    Deal deal = new Deal(_idO, _idN, address(erc20), 0, amount, 0);
+    Deal deal = new Deal(bytes20(ecrecover(_prefixedHashO, uint8(uint24(p >> 96)), rO, sO)), bytes20(ecrecover(_prefixedHashN, uint8(p), rN, sN)), address(erc20), 0, amount, 0);
     NewDeal(address(deal));
   }
 
@@ -121,5 +119,5 @@ contract BatteryManagement {
 
   function chargesNumber(bytes20 _id) public view returns (uint256) {
     return batteriesById[_id].charges;
-  } */
+  }
 }
