@@ -52,18 +52,52 @@ contract Deal {
 
   /* function oldBatteryInfo() public view returns (uint256, bytes4, bytes) {
     uint256 charges = BC.chargesNumber(oldBattery);
-    bytes4 vendorId = BC.vendorOf(oldBattery);
+    address vendorAddress = BC.vendorOf(oldBattery);
     MC = ManagementContract(BC.managementContract());
-    bytes vendorName = MC.pleaseGetName(vendorId);
-    return (charges, vendorId, vendorName);
-  }
+    bytes4 vendorId = MC.vendorId(vendorAddress);
+    bytes memory vendorName;
 
-  function newBatteryInfo() public view returns (uint256, bytes4, bytes) {
-    uint256 charges = BC.chargesNumber(newBattery);
-    bytes4 vendorId = BC.vendorOf(newBattery);
-    MC = ManagementContract(BC.managementContract());
-    bytes vendorName = MC.pleaseGetName(vendorId);
+    uint256 k = 0;
+    uint256 index = 0; */
+/*
+    while (MC.readName(vendorId, index) != "") {
+      mem.push(MC.readName(vendorId, index));
+      index += 32;
+    }
+
+    for (uint256 i = 0; i < mem.length; i++) {
+      for (uint256 j = 0; j < mem[i].length; i++) {
+        vendorName[k++] = mem[i][j];
+      }
+    }
+
     return (charges, vendorId, vendorName);
+  } */
+
+  /* function newBatteryInfo() public view returns (uint256, bytes4, bytes) {
+    uint256 charges = BC.chargesNumber(newBattery);
+    bytes4 vendorId = recoverName(BC.vendorOf(newBattery));
+    MC = ManagementContract(BC.managementContract());
+    bytes vendorName = recoverName(MC.readName(vendorId));
+    return (charges, vendorId, vendorName);
+  } */
+
+  bytes32[] mem;
+
+  /* function recoverName(bytes4 vendorId) public view returns (bytes name) {
+    uint256 k = 0;
+    uint256 index = 0;
+
+    while (MC.readName(vendorId, index) != "") {
+      mem.push(MC.readName(vendorId, index));
+      index += 32;
+    }
+
+    for (uint256 i = 0; i < mem.length; i++) {
+      for (uint256 j = 0; j < mem[i].length; i++) {
+        name[k++] = mem[i][j];
+      }
+    }
   } */
 
   function agreeToDeal(uint256 p, bytes32 r, bytes32 s) public isWaiting {

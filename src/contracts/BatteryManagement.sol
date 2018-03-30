@@ -106,6 +106,14 @@ contract BatteryManagement is Ownable{
     return (999, address(0));
   }
 
+  function recoverAddress(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) internal view returns (address) {
+    uint256 m = n * 2**32 + t;
+    bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+    bytes32 _hash = keccak256(m);
+    bytes32 prefixedHash = keccak256(prefix, _hash);
+    return ecrecover(prefixedHash, v, r, s);
+  }
+
   function initiateDeal(
       uint256 p,
       bytes32 rO,
@@ -122,9 +130,13 @@ contract BatteryManagement is Ownable{
     address _addressN;
 
     (, _addressO) = verifyBattery(p >> 160, uint256(uint32(p >> 128)), uint8(uint24(p >> 96)), rO, sO);
-    (,_addressN) = verifyBattery(uint256(uint16(p >> 64)), uint256(uint8(p >> 32)), uint8(p), rN, sN);
+    (, _addressN) = verifyBattery(uint256(uint16(p >> 64)), uint256(uint8(p >> 32)), uint8(p), rN, sN);
 
-    require(_addressO != address(0) && _addressN != address(0));
+    require(address(_addressO) != address(0) && address(_addressN) != address(0));
+
+    _addressO = recoverAddress(p >> 160, uint256(uint32(p >> 128)), uint8(uint24(p >> 96)), rO, sO);
+    _addressN = recoverAddress(uint256(uint16(p >> 64)), uint256(uint8(p >> 32)), uint8(p), rN, sN);
+
     require(batteriesById[bytes20(_addressO)].owner == car);
     require(batteriesById[bytes20(_addressN)].owner == msg.sender);
     require(!batteriesById[bytes20(_addressO)].inDeal && !batteriesById[bytes20(_addressN)].inDeal);
