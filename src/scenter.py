@@ -8,7 +8,7 @@ from solc import compile_files
 from web3.middleware import geth_poa_middleware
 from web3.utils.transactions import wait_for_transaction_receipt
 import time
-# from eth_account import Account
+from eth_account import Account
 
 def get_abi(contract_name):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
@@ -89,14 +89,18 @@ if __name__ == '__main__':
 
             n = storage['n']
             t = int(time.time())
+            t = 1522396132
 
             m = n * 2 ** 32 + t
 
-            signed_msg = w3.eth.account.privateKeyToAccount(privkey).sign(m)
+
+            m_hash = w3.sha3(m.to_bytes(32, 'big'))
+
+            signed_msg = w3.eth.account.privateKeyToAccount(privkey).sign(m_hash)
 
             v = signed_msg['v']
-            r = hex(signed_msg['r'])[2:]
-            s = hex(signed_msg['s'])[2:]
+            r = signed_msg['r'].to_bytes(32, 'big')
+            s = signed_msg['s'].to_bytes(32, 'big')
 
             with open('database.json') as database_file:
                 management_address = json.load(database_file)['mgmtContract']
@@ -112,6 +116,13 @@ if __name__ == '__main__':
             vendor_id = management_contract.functions.vendors(vendor_address).call()[0]
             vendor_name = management_contract.functions.vendorNames(vendor_id).call()
 
+            _id = Account.recoverMessage(m_hash, vrs=(v, r, s))
+
+            print(n, t, v, r.hex(), s.hex())
+
+            print(_id, address)
+
+            exit(0)
 
             if response == 0:
                 print("Verified successfully.\nTotal charges: %i\nVendor ID: %s\nVendor Name: %s", n, address,

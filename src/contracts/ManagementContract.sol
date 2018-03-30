@@ -15,6 +15,7 @@ contract ManagementContract is Ownable {
 
   event Vendor(address, bytes4);
   event NewBattery(bytes4, bytes20);
+  event NewName(bytes);
 
   struct vendor {
     bytes4 id;
@@ -32,10 +33,17 @@ contract ManagementContract is Ownable {
   mapping (address => bool) public serviceCenters;
   mapping (address => bool) public cars;
 
-  function isNameUnique(bytes _name) public returns (bool) {
+  // Custom method
+  function pleaseGetName(bytes4 _id) public view returns (bytes) {
+    return vendorNames[_id];
+  }
+
+  // Custom method
+  function isNameUnique(bytes _name) public view returns (bool) {
     return names[_name];
   }
 
+  // Custom method
   function isUnique() public view returns (bool) {
     return (vendors[msg.sender].id == "");
   }
@@ -71,6 +79,7 @@ contract ManagementContract is Ownable {
     vendors[msg.sender] = vendor(_bytes4, msg.value, batfee);
     vendorNames[_bytes4] = _bytes;
     names[_bytes] = true;
+    NewName(_bytes);
     Vendor(msg.sender, _bytes4);
     require(walletContract.send(msg.value));
   }
