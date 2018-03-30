@@ -1,6 +1,5 @@
 pragma solidity ^0.4.19;
 
-import "./BatteryManagementInterface.sol";
 import "./ManagementContract.sol";
 import "./ERC20.sol";
 import "./Deal.sol";
@@ -76,7 +75,7 @@ contract BatteryManagement {
   // check this method
   function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns (uint256, address) {
     uint256 m = n * 2**32 + t;
-    bytes memory prefix = "\19Ethereum Signed Message:\n";
+    bytes memory prefix = "\x19Ethereum Signed Message:\n32";
     bytes32 _hash = keccak256(m);
     bytes32 prefixedHash = keccak256(prefix, _hash);
     address _id = ecrecover(prefixedHash, v, r, s);
@@ -120,13 +119,46 @@ contract BatteryManagement {
     history[bytes20(_addressO)] = true;
     history[bytes20(_addressN)] = true;
 
-    // TODO: change 0-es to actual variables
-    Deal deal = new Deal(bytes20(_addressO), bytes20(_addressN), address(erc20), 0, amount, 0);
+    // TODO: last param is timeStub
+    Deal deal = new Deal(bytes20(_addressO), bytes20(_addressN), address(erc20), compensation(p >> 160, uint256(uint16(p >> 64))), amount, 0);
     NewDeal(address(deal));
   }
 
-  function calculate(uint256 n, uint256 t) internal pure returns (uint256) {
-    return n * 2**32 + t;
+  function compensation(uint256 nO, uint256 nN) internal view returns (uint256) {
+    require(nO >= 0 && nN >= 0);
+
+    uint256 caseO = _case(nO);
+    uint256 caseN = _case(nN);
+
+    uint256 delta;
+
+    if (nO >= nN) {
+      delta = nO - nN;
+    }
+
+    if (caseO == caseN) {
+      return delta * 1 ether;
+    } else if ((caseO == 1 && caseN == 0) || (caseO == 2 && caseN == 1)) {
+      return delta * 1003**delta * 1 finney;
+    } else if (caseO == 3 && caseN != 3) {
+      return 1000 ether;
+    } else if (caseO == 2 && caseN == 0) {
+      return delta * 1003500**delta * 1 szabo;
+    } else {
+      return 0;
+    }
+  }
+
+  function _case(uint256 n) internal pure returns (uint256) {
+    if (n < 50) {
+      return 0;
+    } else if (n >= 50 && n < 150) {
+      return 1;
+    } else if (n >= 150 && n < 300) {
+      return 2;
+    } else if (n > 300) {
+      return 3;
+    }
   }
 
   function isBattery(address _id) internal view returns (bool) {
