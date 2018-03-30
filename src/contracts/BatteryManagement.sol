@@ -136,7 +136,7 @@ contract BatteryManagement is Ownable{
     history[bytes20(_addressN)] = true;
 
     // TODO: last param is timeStub
-    Deal deal = new Deal(bytes20(_addressO), bytes20(_addressN), address(erc20), compensation(p >> 160, uint256(uint16(p >> 64))), amount, timeoutThreshold);
+    Deal deal = new Deal(bytes20(_addressO), bytes20(_addressN), address(erc20), compensation(p >> 160, uint256(uint16(p >> 64))), amount, 3600);
 
     approve(address(deal), bytes20(_addressN));
 

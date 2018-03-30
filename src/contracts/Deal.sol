@@ -6,6 +6,16 @@ import "./ManagementContract.sol";
 
 contract Deal {
 
+  modifier isValid() {
+    require(state != State.invalid);
+    _;
+  }
+
+  modifier isWaiting() {
+    require(state == State.waiting);
+    _;
+  }
+
   enum State { invalid, waiting, agreementReceived, paid }
 
   State public state = State.invalid;
@@ -44,7 +54,7 @@ contract Deal {
     uint256 charges = BC.chargesNumber(oldBattery);
     bytes4 vendorId = BC.vendorOf(oldBattery);
     MC = ManagementContract(BC.managementContract());
-    bytes vendorName = MC.vendorNames(vendorId);
+    bytes vendorName = MC.pleaseGetName(vendorId);
     return (charges, vendorId, vendorName);
   }
 
@@ -52,11 +62,11 @@ contract Deal {
     uint256 charges = BC.chargesNumber(newBattery);
     bytes4 vendorId = BC.vendorOf(newBattery);
     MC = ManagementContract(BC.managementContract());
-    bytes vendorName = MC.vendorNames(vendorId);
+    bytes vendorName = MC.pleaseGetName(vendorId);
     return (charges, vendorId, vendorName);
   } */
 
-  function agreeToDeal(uint256 p, bytes32 r, bytes32 s) public {
+  function agreeToDeal(uint256 p, bytes32 r, bytes32 s) public isWaiting {
     uint256 n = p >> 64;
     uint256 t = uint256(uint8(p >> 32));
     uint8 v = uint8(p);
@@ -64,7 +74,7 @@ contract Deal {
     state = State.agreementReceived;
   }
 
-  function confirmDeal(uint256 p, bytes32 r, bytes32 s) public {
+  function confirmDeal(uint256 p, bytes32 r, bytes32 s) public isValid {
     uint256 n = p >> 64;
     uint256 t = uint256(uint8(p >> 32));
     uint8 v = uint8(p);
@@ -73,5 +83,13 @@ contract Deal {
 
   function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns(uint256, address) {
     return BC.verifyBattery(n, t, v, r, s);
+  }
+
+  function cancelDeal() public isWaiting {
+    if (!MC.serviceCenters(msg.sender)) {
+      revert();
+    }
+    // implement me
+    state = State.invalid;
   }
 }
