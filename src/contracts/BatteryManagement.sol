@@ -51,6 +51,14 @@ contract BatteryManagement is Ownable{
     erc20 = ERC20(_token);
   }
 
+  function isBatteryOwner(bytes20 _id) internal view returns (bool) {
+    if (batteriesById[_id].owner == msg.sender) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   function createBattery(address _vendor, bytes20 _id) public onlyManager {
     require(batteriesById[_id].vendor == address(0));
     batteriesById[_id].vendor = _vendor;
@@ -59,6 +67,14 @@ contract BatteryManagement is Ownable{
   function transfer(address _newOwner, bytes20 _id) public batteryOwner(_id) registered(_newOwner) {
     batteriesById[_id].owner = _newOwner;
     Transfer(batteriesById[_id].vendor, batteriesById[_id].owner, _id);
+  }
+
+  function transfer(address _newOwner, bytes20[] _ids) public registered(_newOwner) {
+    for (uint256 i = 0; i < _ids.length; i++) {
+      require(isBatteryOwner(_ids[i]));
+      batteriesById[_ids[i]].owner = _newOwner;
+      Transfer(batteriesById[_ids[i]].vendor, batteriesById[_ids[i]].owner, _ids[i]);
+    }
   }
 
   function approve(address _deal, bytes20 _id) public {
@@ -98,7 +114,7 @@ contract BatteryManagement is Ownable{
 
     if (isBattery(_id)) {
       return (0, batteriesById[bytes20(_id)].vendor);
-    } else if (inHistory(keccak256(m))) {
+    } else if (inHistory(_hash)) {
       return (1, address(0));
     } else if (!isBattery(_id)) {
       return (2, address(0));
