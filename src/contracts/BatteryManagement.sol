@@ -1,6 +1,5 @@
 pragma solidity ^0.4.19;
 
-import "./BatteryManagementInterface.sol";
 import "./ManagementContract.sol";
 import "./ERC20.sol";
 import "./Deal.sol";
@@ -76,7 +75,7 @@ contract BatteryManagement {
   // check this method
   function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns (uint256, address) {
     uint256 m = n * 2**32 + t;
-    bytes memory prefix = "\19Ethereum Signed Message:\n";
+    bytes memory prefix = "\x19Ethereum Signed Message:\n32";
     bytes32 _hash = keccak256(m);
     bytes32 prefixedHash = keccak256(prefix, _hash);
     address _id = ecrecover(prefixedHash, v, r, s);
