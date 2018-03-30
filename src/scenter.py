@@ -8,6 +8,7 @@ from solc import compile_files
 from web3.middleware import geth_poa_middleware
 from web3.utils.transactions import wait_for_transaction_receipt
 import time
+# from eth_account import Account
 
 def get_abi(contract_name):
     contract_compiled = compile_files([CONTRACT_DIR + contract_name + '.sol'])[CONTRACT_DIR + contract_name + '.sol:' + contract_name]
@@ -111,7 +112,6 @@ if __name__ == '__main__':
             vendor_id = management_contract.functions.vendors(vendor_address).call()[0]
             vendor_name = management_contract.functions.vendorNames(vendor_id).call()
 
-            print(n, t, v, r, s)
 
             if response == 0:
                 print("Verified successfully.\nTotal charges: %i\nVendor ID: %s\nVendor Name: %s", n, address,
