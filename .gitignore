@@ -10,7 +10,6 @@
 *Interface*
 !/tests/abi/BatteryManagementInterface.sol
 !/tests/abi/ManagementContractInterface.sol
-/src/contracts/ServiceProviderWallet.sol
 .idea*
 /commit.sh
 *Ownable*
