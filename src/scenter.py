@@ -52,6 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--reg', action='store_true')
     parser.add_argument('--verify')
     parser.add_argument('--contract', nargs=4)
+    parser.add_argument('--status')
 
 
     args = parser.parse_args()
@@ -59,6 +60,26 @@ if __name__ == '__main__':
     w3 = Web3()
     # configure provider to work with PoA chains
     w3.middleware_stack.inject(geth_poa_middleware, layer=0)
+
+    if args.status:
+        deal_address = w3.toChecksumAddress(args.status)
+
+        deal_contract = w3.eth.contract(deal_address, abi=get_abi('Deal'))
+
+        try:
+            state = deal_contract.functions.state().call()
+        except:
+            state = 3
+
+        if state == 0:
+            print("Not found")
+        elif state == 1:
+            print("Waiting for agreement")
+        elif state == 2:
+            print("Not implemented")
+        elif state == 3:
+            print("Not found")
+
 
     if args.new:
         password = args.new
@@ -130,10 +151,10 @@ if __name__ == '__main__':
             new_path = args.contract[0]
             old_path = args.contract[1]
             car = args.contract[2]
-            value = args.contract[3]
+            value = int(args.contract[3]) * (10 ** 18)
 
-            n_new, t_new, v_new, r_new, s_new = get_firmware_data(new_path)
-            n_old, t_old, v_old, r_old, s_old = get_firmware_data(old_path)
+            n_new, t_new, v_new, r_new, s_new = get_firmware_data('firmware/' + new_path[:8] + '.py')
+            n_old, t_old, v_old, r_old, s_old = get_firmware_data('firmware/' + old_path[:8] + '.py')
 
             p = n_old * (2 ** 160) + t_old * (2 ** 128) + v_old * (2 ** 96) + n_new * (2 ** 64) + t_new * (2 ** 32) + v_new
 
