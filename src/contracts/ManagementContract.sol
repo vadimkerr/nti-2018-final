@@ -74,7 +74,6 @@ contract ManagementContract is Ownable {
   }
 
   function vendorDeposit(address _vendor) public view returns (uint256) {
-    require(vendors[_vendor].id != "");
     return vendors[_vendor].deposit;
   }
 

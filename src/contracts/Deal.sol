@@ -1,7 +1,8 @@
-pragma solidity^0.4.19;
+pragma solidity ^0.4.19;
 
 import "./ERC20.sol";
 import "./BatteryManagement.sol";
+import "./ManagementContract.sol";
 
 contract Deal {
 
@@ -17,6 +18,7 @@ contract Deal {
   uint256 timeStub; // check assignment
 
   BatteryManagement BC;
+  ManagementContract MC;
 
   function Deal(
     bytes20 _idO,
@@ -39,14 +41,37 @@ contract Deal {
   }
 
   /* function oldBatteryInfo() public view returns (uint256, bytes4, bytes) {
-    bytes4 _id = BC.batteriesById[oldBattery].id;
-    bytes _name = BC.batteriesById[oldBattery].name;
-    return (BC.batteriesById[oldBattery].charges, _id, _name);
+    uint256 charges = BC.chargesNumber(oldBattery);
+    bytes4 vendorId = BC.vendorOf(oldBattery);
+    MC = ManagementContract(BC.managementContract());
+    bytes vendorName = MC.vendorNames(vendorId);
+    return (charges, vendorId, vendorName);
   }
 
   function newBatteryInfo() public view returns (uint256, bytes4, bytes) {
-    bytes4 _id = BC.batteriesById[newBattery].id;
-    bytes _name = BC.batteriesById[newBattery].name;
-    return (BC.batteriesById[newBattery].charges, _id, _name);
+    uint256 charges = BC.chargesNumber(newBattery);
+    bytes4 vendorId = BC.vendorOf(newBattery);
+    MC = ManagementContract(BC.managementContract());
+    bytes vendorName = MC.vendorNames(vendorId);
+    return (charges, vendorId, vendorName);
   } */
+
+  function agreeToDeal(uint256 p, bytes32 r, bytes32 s) public {
+    uint256 n = p >> 64;
+    uint256 t = uint256(uint8(p >> 32));
+    uint8 v = uint8(p);
+    // implement me
+    state = State.agreementReceived;
+  }
+
+  function confirmDeal(uint256 p, bytes32 r, bytes32 s) public {
+    uint256 n = p >> 64;
+    uint256 t = uint256(uint8(p >> 32));
+    uint8 v = uint8(p);
+    // implement me
+  }
+
+  function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns(uint256, address) {
+    return BC.verifyBattery(n, t, v, r, s);
+  }
 }
