@@ -73,22 +73,22 @@ def checkOutput(_response, _clue, _inverted=False):
         cl = _clue[:]
     if not _inverted:
         res = False
-        if len(_response) == len(_clue):
+        if len(_response) == len(cl):
             res = True
-            for i in range(len(_clue)):
-                if _response[i] != _clue[i]:
+            for i in range(len(cl)):
+                if _response[i] != cl[i]:
                     res = False
         if not res:
-            print('--- ACTUAL RESPONSE:\n{}\n--- EXPECTED RESPONSE:\n{}'.format("\n".join(_response), "\n".join(_clue)))
+            print('--- ACTUAL RESPONSE:\n{}\n--- EXPECTED RESPONSE:\n{}'.format("\n".join(_response), "\n".join(cl)))
     else:
         res = True
-        if len(_response) == len(_clue):
-            for i in range(len(_clue)):
-                if _response[i] == _clue[i]:
+        if len(_response) == len(cl):
+            for i in range(len(cl)):
+                if _response[i] == cl[i]:
                     res = False
         if not res:
             print('--- ACTUAL RESPONSE:\n{}\n--- EXPECTED ANY RESPONSE EXCEPT:\n{}'.format("\n".join(_response),
-                                                                                           "\n".join(_clue)))
+                                                                                           "\n".join(cl)))
     return res
 
 
