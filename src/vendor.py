@@ -190,9 +190,17 @@ elif args.get:
                     with open('firmware/'+filename+'.py', 'w') as firmware_file:
                         firmware_file.write(code)
 
-                # WILL NOT WORK WITH GREAT NUMBER OF BATTERIES!!!
-                tx_hash = management_contract.functions.registerBatteries(batteries).transact({'from': actor, 'value': additional_deposit})
-                wait_for_transaction_receipt(w3, tx_hash)
+                copy_batteries = batteries
+
+                current_batteries = copy_batteries[:200]
+                copy_batteries = copy_batteries[200:]
+                while current_batteries:
+                    tx_hash = management_contract.functions.registerBatteries(current_batteries).transact({'from': actor, 'value': additional_deposit})
+                    wait_for_transaction_receipt(w3, tx_hash)
+
+                    current_batteries = copy_batteries[:200]
+                    copy_batteries = copy_batteries[200:]
+
                 for battery_id in batteries:
                     print('Created battery with ID: ' + w3.toHex(battery_id)[2:])
             else:
@@ -218,17 +226,44 @@ elif args.get:
             battery_id = args.owner[0]
             new_owner = w3.toChecksumAddress(args.owner[1])
 
-            battery_management_address = w3.toChecksumAddress(management_contract.functions.batteryManagement().call())
-            battery_management_contract = w3.eth.contract(battery_management_address, abi=get_abi('BatteryManagement'))
+            if len(battery_id) != 40 or '/' in battery_id:
+                filename = battery_id
+                with open(filename) as file:
+                    battery_ids = file.read().split('\n')
 
-            battery_id = unhexlify(battery_id)
+                battery_management_address = w3.toChecksumAddress(
+                    management_contract.functions.batteryManagement().call())
+                battery_management_contract = w3.eth.contract(battery_management_address,
+                                                              abi=get_abi('BatteryManagement'))
 
-            owner = battery_management_contract.functions.ownerOf(battery_id).call()
+                for battery_id in battery_ids:
+                    battery_id = unhexlify(battery_id)
+                    owner = battery_management_contract.functions.ownerOf(battery_id).call()
+                    if actor != owner:
+                        print('Failed. Not allowed to change ownership.')
+                        exit(0)
 
-            if actor == owner:
-                tx_hash = battery_management_contract.functions.transfer(new_owner, battery_id).transact({'from': actor})
+                for i in range(len(battery_ids)):
+                    battery_ids[i] = unhexlify(battery_id)
+
+                tx_hash = battery_management_contract.functions.transfer(new_owner, battery_ids).transact(
+                    {'from': actor})
                 wait_for_transaction_receipt(w3, tx_hash)
-
                 print('Success')
             else:
-                print('Failed. Not allowed to change ownership.')
+                battery_id = unhexlify(battery_id)
+
+                battery_management_address = w3.toChecksumAddress(
+                    management_contract.functions.batteryManagement().call())
+                battery_management_contract = w3.eth.contract(battery_management_address,
+                                                              abi=get_abi('BatteryManagement'))
+
+                owner = battery_management_contract.functions.ownerOf(battery_id).call()
+
+                if actor == owner:
+                    tx_hash = battery_management_contract.functions.transfer(new_owner, battery_id).transact({'from': actor})
+                    wait_for_transaction_receipt(w3, tx_hash)
+
+                    print('Success')
+                else:
+                    print('Failed. Not allowed to change ownership.')
