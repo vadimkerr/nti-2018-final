@@ -32,6 +32,17 @@ contract ManagementContract is Ownable {
   mapping (bytes => bool) names;
   mapping (address => bool) public serviceCenters;
   mapping (address => bool) public cars;
+
+  // Custom method
+  function pleaseGetName(bytes4 _id) public view returns (bytes) {
+    return vendorNames[_id];
+  }
+
+  // Custom method
+  function isNameUnique(bytes _name) public view returns (bool) {
+    return names[_name];
+  }
+
   // Custom method
   function isUnique() public view returns (bool) {
     return (vendors[msg.sender].id == "");

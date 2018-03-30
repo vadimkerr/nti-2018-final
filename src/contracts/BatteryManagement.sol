@@ -3,8 +3,9 @@ pragma solidity ^0.4.19;
 import "./ManagementContract.sol";
 import "./ERC20.sol";
 import "./Deal.sol";
+import "./lib/Ownable.sol";
 
-contract BatteryManagement {
+contract BatteryManagement is Ownable{
   event Transfer(address indexed, address indexed, bytes20);
   event Approval(address indexed, address indexed, bytes20);
   event NewDeal(address);
@@ -39,8 +40,11 @@ contract BatteryManagement {
   ManagementContract public managementContract;
   ERC20 public erc20;
 
+  uint256 public timeoutThreshold;
+
   mapping (bytes20 => battery) public batteriesById;
   mapping (bytes32 => bool) history; // sure?
+  mapping (address => mapping (address => bytes20)) allowed;
 
   function BatteryManagement(address _managementContract, address _token) {
     managementContract = ManagementContract(_managementContract);
@@ -55,6 +59,14 @@ contract BatteryManagement {
   function transfer(address _newOwner, bytes20 _id) public batteryOwner(_id) registered(_newOwner) {
     batteriesById[_id].owner = _newOwner;
     Transfer(batteriesById[_id].vendor, batteriesById[_id].owner, _id);
+  }
+
+  function approve(address _deal, bytes20 _id) public {
+    require(msg.sender == ownerOf(_id));
+
+    allowed[msg.sender][_deal] = _id;
+
+    Approval(msg.sender, _deal, _id);
   }
 
   function ownerOf(bytes20 _id) public view returns (address) {
@@ -72,7 +84,11 @@ contract BatteryManagement {
   function chargesNumber(bytes20 _id) public view returns (uint256) {
     return batteriesById[_id].charges;
   }
-  // check this method
+
+  function setTimeoutThreshold(uint256 _time) public onlyOwner {
+    timeoutThreshold = _time;
+  }
+
   function verifyBattery(uint256 n, uint256 t, uint8 v, bytes32 r, bytes32 s) public view returns (uint256, address) {
     uint256 m = n * 2**32 + t;
     bytes memory prefix = "\x19Ethereum Signed Message:\n32";
@@ -120,7 +136,10 @@ contract BatteryManagement {
     history[bytes20(_addressN)] = true;
 
     // TODO: last param is timeStub
-    Deal deal = new Deal(bytes20(_addressO), bytes20(_addressN), address(erc20), compensation(p >> 160, uint256(uint16(p >> 64))), amount, 0);
+    Deal deal = new Deal(bytes20(_addressO), bytes20(_addressN), address(erc20), compensation(p >> 160, uint256(uint16(p >> 64))), amount, 3600);
+
+    approve(address(deal), bytes20(_addressN));
+
     NewDeal(address(deal));
   }
 
